@@ -8,7 +8,7 @@ public class Translator extends MyProcess {
 		new Translator().translate(new Parser().parse(new Lexer().lexFromFile("src/MyClass.java")));
 	}
 
-
+	//test commit
 	private final StringBuilder indent = new StringBuilder();
 	private final StringBuilder out = new StringBuilder();
 
