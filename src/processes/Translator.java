@@ -1,11 +1,14 @@
 package processes;
 import constants.Nonterminal;
 import datastructures.tree.NonterminalNode;
+import datastructures.tree.TerminalNode;
 import datastructures.tree.TreeNode;
+
+import static constants.Nonterminal.*;
 
 public class Translator extends MyProcess {
 	public static void main(String[] args)  {
-		new Translator().translate(new Parser().parse(new Lexer().lexFromFile("src/MyClass.java")));
+		new Translator().translate(new Parser().parse(new Lexer().lexFromFile("src/MyTestClass.java")));
 	}
 
 	//test commit
@@ -305,8 +308,7 @@ public class Translator extends MyProcess {
 
 		increaseIndent();
 		println(": ");
-
-		//classBody(parent.getNonterminalChild(index));
+		classBody(parent.getNonterminalChild(index));
 
 		decreaseIndent();
 		println("");
@@ -339,14 +341,40 @@ public class Translator extends MyProcess {
 	}
 	private void classBody(NonterminalNode parent) {
 		// ClassBody = "{" , { ClassBodyDeclaration } , "}" ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+		classBodyDeclaration(parent.getNonterminalChild(1));
+
+
+//		int index = 0;
+//		while (true) {
+//			TreeNode child = parent.get(index);
+//			println(child.toString());
+//			if (child instanceof NonterminalNode) { // if child is Nonterminal
+//				classBodyDeclaration((NonterminalNode) child);
+//			} else { // child is terminal
+//				break;
+//			}
+//		}
+//		error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void classBodyDeclaration(NonterminalNode parent) {
 		// ClassBodyDeclaration = ClassMemberDeclaration
 		//                      | InstanceInitializer
 		//                      | StaticInitializer
 		//                      | ConstructorDeclaration ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+		NonterminalNode child = parent.getNonterminalChild(0);
+		if (child.getValue() == Nonterminal.CLASS_MEMBER_DECLARATION) {
+			classMemberDeclaration(child);
+		} else if(child.getValue() == Nonterminal.INSTANCE_INITIALIZER) {
+			instanceInitializer(child);
+		}
+		else if(child.getValue() == Nonterminal.STATIC_INITIALIZER) {
+			staticInitializer(child);
+		}
+		else {
+			constructorDeclaration(child);
+		}
+
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void classMemberDeclaration(NonterminalNode parent) {
 		// ClassMemberDeclaration = FieldDeclaration
@@ -354,7 +382,21 @@ public class Translator extends MyProcess {
 		//                        | ClassDeclaration
 		//                        | InterfaceDeclaration
 		//                        | ";" ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+		NonterminalNode child = parent.getNonterminalChild(0);
+		if (child.getValue() == Nonterminal.FIELD_DECLARATION) {
+			fieldDeclaration(child);
+		} else if(child.getValue() == Nonterminal.METHOD_DECLARATION) {
+			methodDeclaration(child);
+		}
+		else if(child.getValue() == Nonterminal.CLASS_DECLARATION) {
+			classDeclaration(child);
+		}
+		else {
+			interfaceDeclaration(child);
+		}
+
+
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void fieldDeclaration(NonterminalNode parent) {
 		// FieldDeclaration = { FieldModifier } , UnannType , VariableDeclaratorList , ";" ;
@@ -423,25 +465,63 @@ public class Translator extends MyProcess {
 	}
 	private void methodDeclaration(NonterminalNode parent) {
 		// MethodDeclaration = { MethodModifier } , MethodHeader , MethodBody ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+
+		int index = 0;
+
+		NonterminalNode child = parent.getNonterminalChild(index);
+
+		methodModifier(child);
+		index++;
+
+		methodHeader(child);
+//		while (true) {
+//			TreeNode child = parent.get(index);
+//			if (child instanceof NonterminalNode) { // if child is Nonterminal
+//				methodModifier((NonterminalNode) child);
+//			} else { // child is terminal
+//				break;
+//			}
+//			index++;
+//		}
+//		println("left while loop");
+//		index++;
+//		methodHeader(parent.getNonterminalChild(index));
+//		index++;
+//		methodBody(parent.getNonterminalChild(index));
+
+
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void methodModifier(NonterminalNode parent) {
 		// MethodModifier = Annotation | "public" | "protected" | "private" | "abstract" | "static" | "final" | "synchronized" | "native" | "strictfp" ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void methodHeader(NonterminalNode parent) {
 		// MethodHeader = Result , MethodDeclarator , [ Throws ]
 		//              | TypeParameters , { Annotation } , Result , MethodDeclarator , [ Throws ] ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+
+		// can't make it work idk why :( to be continued..
+
+
+
+
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void result(NonterminalNode parent) {
 		// Result = UnannType
 		//        | "void" ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+		println("result");
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void methodDeclarator(NonterminalNode parent) {
 		// MethodDeclarator = Identifier , "(" , [ FormalParameterList ] , ")", [ Dims ] ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+		print("def ");
+//		String methodName = parent.getTerminalChild(0).getText();
+//		print(methodName);
+//		print(":");
+
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void formalParameterList(NonterminalNode parent) {
 		// FormalParameterList = FormalParameters , [ "," , LastFormalParameter ] ;
@@ -485,19 +565,19 @@ public class Translator extends MyProcess {
 	private void methodBody(NonterminalNode parent) {
 		// MethodBody = Block
 		//            | ";" ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void instanceInitializer(NonterminalNode parent) {
 		// InstanceInitializer = Block ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void staticInitializer(NonterminalNode parent) {
 		// StaticInitializer = "static" , Block ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void constructorDeclaration(NonterminalNode parent) {
 		// ConstructorDeclaration = { ConstructorModifier } , ConstructorDeclarator , [ Throws ] , ConstructorBody ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void constructorModifier(NonterminalNode parent) {
 		// ConstructorModifier = Annotation | "public" | "protected" | "private" ;

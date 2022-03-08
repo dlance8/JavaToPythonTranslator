@@ -9,6 +9,10 @@ public class MyClass {
 //        int number = scan.nextInt();
 //        System.out.println("You entered: " + number);
     }
+
+//    private void otherMethod(){
+//        System.out.println("Hi World");
+//    }
 }
 
 
