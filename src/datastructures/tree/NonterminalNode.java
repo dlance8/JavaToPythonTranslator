@@ -39,6 +39,15 @@ public class NonterminalNode extends ArrayList<TreeNode> implements TreeNode {
 	}
 
 	@Override
+	public int fullSize() {
+		int fullSize = 0;
+		for (TreeNode child : this) {
+			fullSize += child.fullSize();
+		}
+		return fullSize;
+	}
+
+	@Override
 	public String valueString() {
 		final String original = value.toString();
 		StringBuilder stringBuilder = new StringBuilder();
