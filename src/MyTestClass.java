@@ -4,7 +4,7 @@ public class MyTestClass {
     }
 
     private static void test2(){
-        System.out.print("test function 2");
+        test();
     }
 
 
@@ -12,5 +12,8 @@ public class MyTestClass {
     public static void main(String[] args){
         System.out.println("Hello World");
         test();
+//        for (int i = 0; i < 5; ++i){
+//            System.out.print(i);
+//        }
     }
 }
