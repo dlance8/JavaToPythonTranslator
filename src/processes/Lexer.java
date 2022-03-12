@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+
 public final class Lexer extends MyProcess {
 	private boolean lexing;
 	private char currentChar;

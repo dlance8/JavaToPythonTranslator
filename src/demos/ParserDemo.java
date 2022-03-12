@@ -13,11 +13,11 @@ public class ParserDemo {
 
 	public static void main(String[] args) {
 		Parser parser = new Parser();
-		NonterminalNode root = parser.parse(new Lexer().lexFromFile("src/MyTestClass.java"));
+		NonterminalNode root = parser.parse(new Lexer().lexFromFile("src/Examples/MyTestClass.java"));
 		//root.tighten();
 		System.out.println(root);
 		if (USE_DEBUG_UI) {
-			ParserDemoWithDebugUI.launch(args, parser.debugRoot);
+			//ParserDemoWithDebugUI.launch(args, parser.debugRoot);
 		}
 	}
 
