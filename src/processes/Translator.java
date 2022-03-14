@@ -929,7 +929,15 @@ public class Translator extends MyProcess {
 		//                    | IfThenElseStatementNoShortIf
 		//                    | WhileStatementNoShortIf
 		//                    | ForStatementNoShortIf ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+
+		NonterminalNode child = parent.getNonterminalChild(0);
+		String className = "";
+		if(child.getValue() == STATEMENT_WITHOUT_TRAILING_SUBSTATEMENT){
+			statementWithoutTrailingSubstatement(child, className);
+		}
+
+
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void statementWithoutTrailingSubstatement(NonterminalNode parent, String className) {
 		// StatementWithoutTrailingSubstatement = Block
@@ -1044,56 +1052,66 @@ public class Translator extends MyProcess {
 	private void ifThenElseStatement(NonterminalNode parent) {
 		// IfThenElseStatement = "if" , "(" , Expression , ")" , StatementNoShortIf , "else" , Statement ;
 
-//		int index = 0;
-//		String className = ""; //ignore
-//		while (index < parent.size()) {
-//			TreeNode child = parent.get(index);
-//
-//			if (child instanceof NonterminalNode) {
-//				if (((NonterminalNode) child).getValue() == EXPRESSION){
-//					expression((NonterminalNode) child);
-//					index++;
-//				}
-//				if (((NonterminalNode) child).getValue() == STATEMENT_NO_SHORT_IF){
-//					statementNoShortIf((NonterminalNode) child);
-//					index++;
-//				}
-//
-//				if (((NonterminalNode) child).getValue() == STATEMENT){
-//					statement((NonterminalNode) child, className);
-//					index++;
-//				}
-//
-//			}
-//
-//			else if (child instanceof TerminalNode) {
-//				if(((TerminalNode) child).getValue() == IF){
-//					print("if");
-//					index++;
-//				}
-//
-//				if(((TerminalNode) child).getValue() == OPEN_PARENTHESIS){
-//					print("(");
-//					index++;
-//				}
-//
-//				if(((TerminalNode) child).getValue() == CLOSE_PARENTHESIS){
-//					print(")");
-//					index++;
-//				}
-//
-//				if(((TerminalNode) child).getValue() == ELSE){
-//					print("else");
-//					index++;
-//				}
-//
-//			}
-//
-//			else{
-//				index++;
-//			}
-//
-//		}
+		int index = 0;
+		String className = ""; //ignore
+		while (index < parent.size()) {
+			TreeNode child = parent.get(index);
+
+			if (child instanceof NonterminalNode) {
+				if (((NonterminalNode) child).getValue() == EXPRESSION){
+					expression((NonterminalNode) child);
+					index++;
+				}
+				if (((NonterminalNode) child).getValue() == STATEMENT_NO_SHORT_IF){
+					statementNoShortIf((NonterminalNode) child);
+					index++;
+				}
+
+				if (((NonterminalNode) child).getValue() == STATEMENT){
+					statement((NonterminalNode) child, className);
+					index++;
+				}
+
+			}
+
+			else if (child instanceof TerminalNode) {
+				if(((TerminalNode) child).getValue() == IF){
+					print("if");
+					index++;
+				}
+
+				if(((TerminalNode) child).getValue() == OPEN_PARENTHESIS){
+					print("(");
+					index++;
+				}
+
+				if(((TerminalNode) child).getValue() == CLOSE_PARENTHESIS){
+					print("):");
+					increaseIndent();
+					increaseIndent();
+					println("");
+					decreaseIndent();
+					decreaseIndent();
+					index++;
+				}
+
+				if(((TerminalNode) child).getValue() == ELSE){
+					print("else:");
+					increaseIndent();
+					increaseIndent();
+					println("");
+					decreaseIndent();
+					decreaseIndent();
+					index++;
+				}
+
+			}
+
+			else{
+				index++;
+			}
+
+		}
 
 
 		//error("Nonterminal " + parent.getValue() + " is not supported.");
