@@ -1,11 +1,9 @@
 package Examples;
 
-
 public class classMethods {
     private static void test(){
         System.out.print("test function");
         test2();
-
     }
 
     private static void test2(){
