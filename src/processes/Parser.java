@@ -3,11 +3,14 @@ import constants.Nonterminal;
 import constants.Terminal;
 import constants.TokenType;
 import datastructures.Token;
-import javafx.scene.control.TreeItem;
 import datastructures.tree.NonterminalNode;
 import datastructures.tree.TerminalNode;
 import java.util.ArrayList;
 public final class Parser extends MyProcess {
+	public static void main(String[] args) {
+		System.out.println(new Parser().parse(new Lexer().lexFromFile("C:/Workspaces/in/MyClass.java")));
+	}
+
 	private static final boolean PRINT_PROGRESS = false;
 
 	private boolean parsing;
@@ -16,25 +19,6 @@ public final class Parser extends MyProcess {
 	private NonterminalNode currentParent, root;
 	private Token currentToken;
 
-	public TreeItem<String> debugRoot;
-	private TreeItem<String> debugCurrent;
-	private TreeItem<String> addMessage(String message) {
-		return addMessage(debugCurrent, message);
-	}
-	private TreeItem<String> addMessage(TreeItem<String> parent, String message) {
-		TreeItem<String> newItem = new TreeItem<>(message);
-		parent.getChildren().add(newItem);
-		return newItem;
-	}
-	private TreeItem<String> newCurrent(String message) {
-		return debugCurrent = debugCurrent == null ? debugRoot = new TreeItem<>(message) : addMessage(message);
-	}
-	private void $(TreeItem<String> node, boolean accepted) {
-		$(node, accepted, null);
-	}
-	private void $(TreeItem<String> node, boolean accepted, String text) {
-		node.setValue((accepted ? '\u2713' : '\u2717') + node.getValue() + (text == null ? "" : " | " + text));
-	}
 	private void printProgress(String message) {
 		if (PRINT_PROGRESS) System.out.println(message);
 	}
@@ -48,28 +32,43 @@ public final class Parser extends MyProcess {
 
 	private interface NonterminalAcceptor { boolean accept(); }
 
+	private void parserError(String message) {
+		//super.error(message);
+		System.out.println("ERROR: " + message);
+		System.exit(1);
+	}
+
 	public NonterminalNode parse(ArrayList<Token> tokens) {
 		this.tokens = tokens;
+
 		start();
 		try {
 			accept(this::compilationUnit);
-		} catch (NullPointerException|StackOverflowError e) {
-			error("Failed in Parser");
+		} catch (NullPointerException e1) {
+			parserError("Failed in Parser: NullPointerException");
+		} catch (StackOverflowError e2) {
+			parserError("Failed in Parser: StackOverflowError");
 		}
+
+		if (root.fullSize() != tokens.size()) {
+			parserError("Failed in Parser: Incomplete Parse");
+		}
+
 		return root.size() == 0 ? root : root.getNonterminalChild(0);
 	}
 	private boolean identifier() {
-//		return accept(Nonterminal.IDENTIFIER, () -> acceptAppendAdvance(parsing && currentToken.getType() == TokenType.IDENTIFIER));
 		return acceptAppendAdvance(parsing && currentToken.getType() == TokenType.IDENTIFIER);
 	}
 	private boolean literal() {
-//		return accept(Nonterminal.LITERAL, () -> acceptAppendAdvance(currentToken.getType() == TokenType.LITERAL));
 		return acceptAppendAdvance(currentToken.getType() == TokenType.LITERAL);
 	}
+
 	private boolean check(TokenType type) {
 		return parsing && currentToken.getType() == type;
 	}
-
+	private boolean check(Terminal value) {
+		return parsing && currentToken.getValue() == value;
+	}
 	private boolean lookAhead(int k, Terminal value) {
 		return parsing && currentIndex + k < tokens.size() && tokens.get(currentIndex + k).getValue() == value;
 	}
@@ -80,51 +79,62 @@ public final class Parser extends MyProcess {
 		return true;
 	}
 
-	private boolean check(Terminal value) {
-		return parsing && currentToken.getValue() == value;
-	}
-	private boolean accept(Nonterminal value, Terminal... terminals) {
-		final NonterminalNode currentParentAtStart = currentParent;
-		currentParent = new NonterminalNode(value);
-		boolean acceptedAny = false;
-		for (Terminal terminal : terminals) {
-			if (accept(terminal)) {
-				acceptedAny = true;
-				break;
-			}
+	private NonterminalNode acceptWithoutAdding(NonterminalAcceptor acceptor) {
+		final boolean parsingAtStart = parsing;
+		final int indexAtStart = currentIndex;
+		final NonterminalNode parentAtStart = currentParent;
+		final Token tokenAtStart = currentToken;
+		final boolean accepted = acceptor.accept();
+		if (accepted) {
+			NonterminalNode result = currentParent.getNonterminalChild(currentParent.size() - 1);
+			currentParent.remove(currentParent.size() - 1);
+			return result;
+		} else {
+			parsing = parsingAtStart;
+			currentIndex = indexAtStart;
+			currentParent = parentAtStart;
+			currentToken = tokenAtStart;
+			return null;
 		}
-		if (acceptedAny)
-			currentParentAtStart.add(currentParent);
-		currentParent = currentParentAtStart;
-		return acceptedAny;
 	}
-	private boolean accept(Nonterminal value, NonterminalAcceptor Nonterminals) {
+	private boolean accept(Nonterminal value, NonterminalAcceptor acceptor) {
 		printProgress("Nonterminal\n\tvalue = " + value + "\n\tcurrentToken = " + currentToken.getText());
-		final TreeItem<String> oldCurrent = debugCurrent, thisRoot = newCurrent(value.toString());
 
 		final NonterminalNode parentAtStart = currentParent;
 
 		currentParent = new NonterminalNode(value);
 
-		TreeItem<String> x = debugCurrent = addMessage(thisRoot, "option 1 of 1 | currentToken = \"" + currentToken.getText() + "\"");
-
-		final boolean accepted = accept(Nonterminals);
-
-		$(x, accepted);
+		final boolean accepted = accept(acceptor);
 
 		if (accepted)
 			parentAtStart.add(currentParent);
 		currentParent = parentAtStart;
 
-		$(thisRoot, accepted);
-		debugCurrent = oldCurrent;
-
 		return accepted;
+	}
+	private boolean acceptAny(Terminal... terminals) {
+		for (Terminal terminal : terminals)
+			if (accept(terminal)) return true;
+		return false;
 	}
 	private boolean acceptAny(NonterminalAcceptor... acceptors) {
 		for (NonterminalAcceptor acceptor : acceptors)
 			if (accept(acceptor)) return true;
 		return false;
+	}
+	private boolean acceptAll(Terminal... terminals) {
+		final int childrenAtStart = currentParent.size();
+		final boolean accepted = accept(() -> {
+			for (Terminal terminal : terminals)
+				if (!accept(terminal)) return false;
+			return true;
+		});
+		if (!accepted) {
+			while (currentParent.size() > childrenAtStart) {
+				currentParent.remove(currentParent.size() - 1);
+			}
+		}
+		return accepted;
 	}
 	private boolean acceptAll(NonterminalAcceptor... acceptors) {
 		final int childrenAtStart = currentParent.size();
@@ -142,80 +152,38 @@ public final class Parser extends MyProcess {
 	}
 	private boolean accept(Terminal terminal) {
 		printProgress("TERMINAL\n\tvalue = " + terminal + "\n\tcurrentToken = " + currentToken.getText());
-		final String text = currentToken.getText();
-		final boolean accepted = acceptAppendAdvance(currentToken.getValue() == terminal);
-		TreeItem<String> newTreeItem = addMessage("TERMINAL: " + terminal.toString());
-		$(newTreeItem, accepted, text);
-		return accepted;
+		return acceptAppendAdvance(currentToken.getValue() == terminal);
 	}
-	private boolean accept(NonterminalAcceptor Nonterminal) {
-		final TreeItem<String> oldCurrent = debugCurrent, newCurrent = newCurrent("ACCEPT");
+	private boolean accept(NonterminalAcceptor acceptor) {
 		final boolean parsingAtStart = parsing;
 		final int indexAtStart = currentIndex;
 		final NonterminalNode parentAtStart = currentParent;
 		final Token tokenAtStart = currentToken;
-		final boolean accepted = Nonterminal.accept();
+		final boolean accepted = acceptor.accept();
 		if (!accepted) {
 			parsing = parsingAtStart;
 			currentIndex = indexAtStart;
 			currentParent = parentAtStart;
 			currentToken = tokenAtStart;
 		}
-		if (newCurrent.getChildren().size() == 1) {
-			if (oldCurrent != null) {
-				oldCurrent.getChildren().remove(oldCurrent.getChildren().size() - 1);
-				oldCurrent.getChildren().add(newCurrent.getChildren().get(0));
-			}
-		} else {
-			$(newCurrent, accepted);
-		}
-		debugCurrent = oldCurrent;
 		return accepted;
 	}
-	private boolean acceptRepeating(NonterminalAcceptor acceptor) {
-		final TreeItem<String> oldCurrent = debugCurrent, newCurrent = newCurrent("ACCEPT REPEATING");
-
-		int n = 0;
-		while (true)
-			if (accept(acceptor)) n++; else break;
-
-		$(newCurrent, n > 0);
-		debugCurrent = oldCurrent;
-
-		return true;
-	}
 	private boolean acceptRepeating(Terminal value) {
-		final TreeItem<String> oldCurrent = debugCurrent, newCurrent = newCurrent("ACCEPT REPEATING");
-
-		int n = 0;
 		while (true)
-			if (accept(value)) n++; else break;
-
-		$(newCurrent, n > 0);
-		debugCurrent = oldCurrent;
-
+			if (!accept(value)) break;
 		return true;
 	}
-	private boolean acceptOptional(NonterminalAcceptor Nonterminal) {
-		final TreeItem<String> oldCurrent = debugCurrent, newCurrent = newCurrent("ACCEPT OPTIONAL");
-		final boolean accepted = accept(Nonterminal);
-		if (newCurrent.getChildren().size() == 1) {
-			final TreeItem<String> child = newCurrent.getChildren().get(0);
-			child.setValue(new StringBuilder(child.getValue()).insert(1, '[').append(']').toString());
-			oldCurrent.getChildren().set(oldCurrent.getChildren().size() - 1, child);
-		} else $(newCurrent, accepted);
-		debugCurrent = oldCurrent;
+	private boolean acceptRepeating(NonterminalAcceptor acceptor) {
+		while (true)
+			if (!accept(acceptor)) break;
 		return true;
 	}
 	private boolean acceptOptional(Terminal value) {
-		final TreeItem<String> oldCurrent = debugCurrent, newCurrent = newCurrent("ACCEPT OPTIONAL");
-		final boolean accepted = accept(value);
-		if (newCurrent.getChildren().size() == 1) {
-			final TreeItem<String> child = newCurrent.getChildren().get(0);
-			child.setValue(new StringBuilder(child.getValue()).insert(2, '[').append(']').toString());
-			oldCurrent.getChildren().set(oldCurrent.getChildren().size() - 1, child);
-		} else $(newCurrent, accepted);
-		debugCurrent = oldCurrent;
+		accept(value);
+		return true;
+	}
+	private boolean acceptOptional(NonterminalAcceptor Nonterminal) {
+		accept(Nonterminal);
 		return true;
 	}
 	private void start() {
@@ -256,7 +224,22 @@ public final class Parser extends MyProcess {
 		return accept(Nonterminal.CLASS_OR_INTERFACE_TYPE, () -> acceptAny(this::classType, this::interfaceType));
 	}
 	private boolean classType() {
-		return accept(Nonterminal.CLASS_TYPE, () -> acceptAny(() -> acceptAll(() -> acceptRepeating(this::annotation), this::identifier, () -> acceptOptional(this::typeArguments)), () -> acceptAll(this::classOrInterfaceType, () -> accept(Terminal.DOT), () -> acceptRepeating(this::annotation), this::identifier, () -> acceptOptional(this::typeArguments))));
+		return accept(Nonterminal.CLASS_TYPE,
+			() -> acceptAny(
+				() -> acceptAll(
+					() -> acceptRepeating(this::annotation),
+					this::identifier,
+					() -> acceptOptional(this::typeArguments)
+				)
+//				() -> acceptAll(
+//					this::classOrInterfaceType,
+//					() -> accept(Terminal.DOT),
+//					() -> acceptRepeating(this::annotation),
+//					this::identifier,
+//					() -> acceptOptional(this::typeArguments)
+//				)
+			)
+		);
 	}
 	private boolean interfaceType() {
 		return accept(Nonterminal.INTERFACE_TYPE, this::classType);
@@ -583,7 +566,33 @@ public final class Parser extends MyProcess {
 		return accept(Nonterminal.SINGLE_ELEMENT_ANNOTATION, () -> acceptAll(() -> accept(Terminal.AT_SYMBOL), this::typeName, () -> accept(Terminal.OPEN_PARENTHESIS), this::elementValue, () -> accept(Terminal.CLOSE_PARENTHESIS)));
 	}
 	private boolean arrayInitializer() {
-		return accept(Nonterminal.ARRAY_INITIALIZER, () -> acceptAll(() -> accept(Terminal.OPEN_BRACE), () -> acceptOptional(this::variableInitializerList), () -> acceptOptional(() -> accept(Terminal.COMMA)), () -> accept(Terminal.CLOSE_BRACE)));
+		System.out.println("\nhere\n" + currentToken);
+		final boolean accepted = accept(Nonterminal.ARRAY_INITIALIZER,
+//			() -> acceptAll(
+//				() -> accept(Terminal.OPEN_BRACE),
+//				() -> acceptOptional(this::variableInitializerList),
+//				() -> acceptOptional(Terminal.COMMA),
+//				() -> accept(Terminal.CLOSE_BRACE)
+//			)
+			() -> {
+				System.out.println("X0\n" + currentToken);
+				if (!accept(Terminal.OPEN_BRACE))
+					return false;
+				System.out.println("X1\n" + currentToken);
+				if (!acceptOptional(this::variableInitializerList))
+					return false;
+				System.out.println("X2\n" + currentToken);
+				if (!acceptOptional(Terminal.COMMA))
+					return false;
+				System.out.println("X3\n" + currentToken);
+				if (!accept(Terminal.CLOSE_BRACE))
+					return false;
+				System.out.println("X4\n" + currentToken);
+				return true;
+			}
+		);
+		System.out.println("done");
+		return accepted;
 	}
 	private boolean variableInitializerList() {
 		return accept(Nonterminal.VARIABLE_INITIALIZER_LIST, () -> acceptAll(this::variableInitializer, () -> acceptRepeating(() -> acceptAll(() -> accept(Terminal.COMMA), this::variableInitializer))));
@@ -598,9 +607,11 @@ public final class Parser extends MyProcess {
 		return accept(Nonterminal.BLOCK_STATEMENT, () -> acceptAny(this::localVariableDeclarationStatement, this::classDeclaration, this::statement));
 	}
 	private boolean localVariableDeclarationStatement() {
+		//System.out.println("1: LOCAL VARIABLE DECLARATION STATEMENT\n" + currentToken + "\n");
 		return accept(Nonterminal.LOCAL_VARIABLE_DECLARATION_STATEMENT, () -> acceptAll(this::localVariableDeclaration, () -> accept(Terminal.SEMICOLON)));
 	}
 	private boolean localVariableDeclaration() {
+		//System.out.println("2: LOCAL VARIABLE DECLARATION\n" + currentToken + "\n");
 		return accept(Nonterminal.LOCAL_VARIABLE_DECLARATION, () -> acceptAll(() -> acceptRepeating(this::variableModifier), this::unannType, this::variableDeclaratorList));
 	}
 	private boolean statement() {
@@ -738,9 +749,11 @@ public final class Parser extends MyProcess {
 	private boolean resource() {
 		return accept(Nonterminal.RESOURCE, () -> acceptAll(() -> acceptRepeating(this::variableModifier), this::unannType, this::variableDeclaratorId, () -> accept(Terminal.ASSIGN), this::expression));
 	}
-	private boolean primary() {
-		return accept(Nonterminal.PRIMARY, () -> acceptAny(this::primaryNoNewArray, this::arrayCreationExpression));
-	}
+
+//	private boolean primary() {
+//		return accept(Nonterminal.PRIMARY, () -> acceptAny(this::primaryNoNewArray, this::arrayCreationExpression));
+//	}
+
 	private boolean primaryNoNewArray() {
 		if (!(
 			   check(TokenType.LITERAL)
@@ -766,16 +779,8 @@ public final class Parser extends MyProcess {
 				this::literal,
 				this::classLiteral,
 				() -> accept(Terminal.THIS),
-				() -> acceptAll(
-					this::typeName,
-					() -> accept(Terminal.DOT),
-					() -> accept(Terminal.THIS)
-				),
-				() -> acceptAll(
-					() -> accept(Terminal.OPEN_PARENTHESIS),
-					this::expression,
-					() -> accept(Terminal.CLOSE_PARENTHESIS)
-				),
+				() -> acceptAll(this::typeName, () -> accept(Terminal.DOT), () -> accept(Terminal.THIS)),
+				() -> acceptAll(() -> accept(Terminal.OPEN_PARENTHESIS), this::expression, () -> accept(Terminal.CLOSE_PARENTHESIS)),
 				this::classInstanceCreationExpression,
 				this::fieldAccess,
 				this::arrayAccess,
@@ -789,22 +794,36 @@ public final class Parser extends MyProcess {
 			() -> acceptAny(
 				() -> acceptAll(
 					this::typeName,
-					() -> acceptRepeating(
-						() -> acceptAll(
-							() -> accept(Terminal.OPEN_BRACKET),
-							() -> accept(Terminal.CLOSE_BRACKET)
-						)
-					),
-					() -> accept(Terminal.DOT),
-					() -> accept(Terminal.CLASS)
+					() -> acceptRepeating(() -> acceptAll(Terminal.OPEN_BRACKET, Terminal.CLOSE_BRACKET)),
+					() -> acceptAll(Terminal.DOT, Terminal.CLASS)
 				),
 				() -> acceptAll(
 					this::numericType,
-					() -> acceptRepeating(
-						() -> acceptAll(() -> accept(Terminal.OPEN_BRACKET), () -> accept(Terminal.CLOSE_BRACKET))), () -> accept(Terminal.DOT), () -> accept(Terminal.CLASS)), () -> acceptAll(() -> accept(Terminal.BOOLEAN), () -> acceptRepeating(() -> acceptAll(() -> accept(Terminal.OPEN_BRACKET), () -> accept(Terminal.CLOSE_BRACKET))), () -> accept(Terminal.DOT), () -> accept(Terminal.CLASS)), () -> acceptAll(() -> accept(Terminal.VOID), () -> accept(Terminal.DOT), () -> accept(Terminal.CLASS))));
+					() -> acceptRepeating(() -> acceptAll(Terminal.OPEN_BRACKET, Terminal.CLOSE_BRACKET)),
+					() -> acceptAll(Terminal.DOT, Terminal.CLASS)
+				),
+				() -> acceptAll(
+					() -> accept(Terminal.BOOLEAN),
+					() -> acceptRepeating(() -> acceptAll(Terminal.OPEN_BRACKET, Terminal.CLOSE_BRACKET)),
+					() -> acceptAll(Terminal.DOT, Terminal.CLASS)
+				),
+				() -> acceptAll(Terminal.VOID, Terminal.DOT, Terminal.CLASS)
+			)
+		);
 	}
 	private boolean classInstanceCreationExpression() {
-		return accept(Nonterminal.CLASS_INSTANCE_CREATION_EXPRESSION, () -> acceptAny(this::unqualifiedClassInstanceCreationExpression, () -> acceptAll(this::expressionName, () -> accept(Terminal.DOT), this::unqualifiedClassInstanceCreationExpression), () -> acceptAll(this::primary, () -> accept(Terminal.DOT), this::unqualifiedClassInstanceCreationExpression)));
+		return classInstanceCreationExpression_noPrimary() || classInstanceCreationExpression_onlyPrimary();
+	}
+	private boolean classInstanceCreationExpression_noPrimary() {
+		return accept(Nonterminal.CLASS_INSTANCE_CREATION_EXPRESSION, () -> acceptAny(
+			this::unqualifiedClassInstanceCreationExpression,
+			() -> acceptAll(this::expressionName, () -> accept(Terminal.DOT), this::unqualifiedClassInstanceCreationExpression)
+		));
+	}
+	private boolean classInstanceCreationExpression_onlyPrimary() {
+		return accept(Nonterminal.CLASS_INSTANCE_CREATION_EXPRESSION,
+			() -> acceptAll(this::primary, () -> accept(Terminal.DOT), this::unqualifiedClassInstanceCreationExpression)
+		);
 	}
 	private boolean unqualifiedClassInstanceCreationExpression() {
 		return accept(Nonterminal.UNQUALIFIED_CLASS_INSTANCE_CREATION_EXPRESSION, () -> acceptAll(() -> accept(Terminal.NEW), () -> acceptOptional(this::typeArguments), this::classOrInterfaceTypeToInstantiate, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS), () -> acceptOptional(this::classBody)));
@@ -816,48 +835,31 @@ public final class Parser extends MyProcess {
 		return accept(Nonterminal.TYPE_ARGUMENTS_OR_DIAMOND, () -> acceptAny(this::typeArguments, () -> acceptAll(() -> accept(Terminal.LESS_THAN), () -> accept(Terminal.GREATER_THAN))));
 	}
 	private boolean fieldAccess() {
+		return fieldAccess_noPrimary() || fieldAccess_onlyPrimary();
+	}
+	private boolean fieldAccess_noPrimary() {
+		return accept(Nonterminal.FIELD_ACCESS, () -> acceptAny(
+			() -> acceptAll(() -> accept(Terminal.SUPER), () -> accept(Terminal.DOT), this::identifier),
+			() -> acceptAll(this::typeName, () -> accept(Terminal.DOT), () -> accept(Terminal.SUPER), () -> accept(Terminal.DOT), this::identifier)
+		));
+	}
+	private boolean fieldAccess_onlyPrimary() {
 		return accept(Nonterminal.FIELD_ACCESS,
-			() -> acceptAny(
-				() -> acceptAll(
-					this::primary,
-					() -> accept(Terminal.DOT),
-					this::identifier
-				),
-				() -> acceptAll(
-					() -> accept(Terminal.SUPER),
-					() -> accept(Terminal.DOT),
-					this::identifier
-				),
-				() -> acceptAll(
-					this::typeName,
-					() -> accept(Terminal.DOT),
-					() -> accept(Terminal.SUPER),
-					() -> accept(Terminal.DOT),
-					this::identifier
-				)
-			)
+			() -> acceptAll(this::primary, () -> accept(Terminal.DOT), this::identifier)
 		);
 	}
 	private boolean arrayAccess() {
-		return accept(Nonterminal.ARRAY_ACCESS,
-			() -> acceptAny(
-				() -> acceptAll(
-					this::expressionName,
-					() -> accept(Terminal.OPEN_BRACKET),
-					this::expression,
-					() -> accept(Terminal.CLOSE_BRACKET)
-				),
-				() -> acceptAll(
-					this::primaryNoNewArray,
-					() -> accept(Terminal.OPEN_BRACKET),
-					this::expression,
-					() -> accept(Terminal.CLOSE_BRACKET)
-				)
-			)
-		);
+		return accept(Nonterminal.ARRAY_ACCESS, () -> acceptAny(
+			() -> acceptAll(this::expressionName, () -> accept(Terminal.OPEN_BRACKET), this::expression, () -> accept(Terminal.CLOSE_BRACKET)),
+			() -> acceptAll(this::primaryNoNewArray, () -> accept(Terminal.OPEN_BRACKET), this::expression, () -> accept(Terminal.CLOSE_BRACKET))
+		));
 	}
 	private boolean methodInvocation() {
-		return accept(Nonterminal.METHOD_INVOCATION, () -> acceptAny(
+		return methodInvocation_noPrimary() || methodInvocation_onlyPrimary();
+	}
+	private boolean methodInvocation_noPrimary() {
+		System.out.println(1);
+		final boolean accepted = accept(Nonterminal.METHOD_INVOCATION, () -> acceptAny(
 			() -> acceptAll(this::methodName, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS)),
 			() -> acceptAll(this::typeName, () -> accept(Terminal.DOT), () -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS)),
 			() -> {
@@ -876,18 +878,50 @@ public final class Parser extends MyProcess {
 				currentParent.add(dot);
 				return acceptAll(() -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS));
 			},
-			() -> acceptAll(this::primary, () -> accept(Terminal.DOT), () -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS)),
 			() -> acceptAll(() -> accept(Terminal.SUPER), () -> accept(Terminal.DOT), () -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS)),
-			() -> acceptAll(this::typeName, () -> accept(Terminal.DOT), () -> accept(Terminal.SUPER), () -> accept(Terminal.DOT), () -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS))));
+			() -> acceptAll(this::typeName, () -> accept(Terminal.DOT), () -> accept(Terminal.SUPER), () -> accept(Terminal.DOT), () -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS)))
+		);
+		System.out.println("1: " + accepted);
+		return accepted;
+	}
+	private boolean methodInvocation_onlyPrimary() {
+		System.out.println(2);
+		System.out.println(primary());
+		System.out.println(currentToken);
+		final boolean accepted = accept(Nonterminal.METHOD_INVOCATION, () ->
+			acceptAll(this::primary, () -> accept(Terminal.DOT), () -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS))
+		);
+		System.out.println("2: " + accepted);
+		return accepted;
 	}
 	private boolean argumentList() {
 		return accept(Nonterminal.ARGUMENT_LIST, () -> acceptAll(this::expression, () -> acceptRepeating(() -> acceptAll(() -> accept(Terminal.COMMA), this::expression))));
 	}
 	private boolean methodReference() {
-		return accept(Nonterminal.METHOD_REFERENCE, () -> acceptAny(() -> acceptAll(this::expressionName, () -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier), () -> acceptAll(this::referenceType, () -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier), () -> acceptAll(this::primary, () -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier), () -> acceptAll(() -> accept(Terminal.SUPER), () -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier), () -> acceptAll(this::typeName, () -> accept(Terminal.DOT), () -> accept(Terminal.SUPER), () -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier), () -> acceptAll(this::classType, () -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), () -> accept(Terminal.NEW)), () -> acceptAll(this::arrayType, () -> accept(Terminal.DOUBLE_COLON), () -> accept(Terminal.NEW))));
+		return methodReference_noPrimary() || methodReference_onlyPrimary();
+	}
+	private boolean methodReference_noPrimary() {
+		return accept(Nonterminal.METHOD_REFERENCE, () -> acceptAny(
+			() -> acceptAll(this::expressionName, () -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier),
+			() -> acceptAll(this::referenceType, () -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier),
+			() -> acceptAll(() -> accept(Terminal.SUPER), () -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier),
+			() -> acceptAll(this::typeName, () -> accept(Terminal.DOT), () -> accept(Terminal.SUPER), () -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier),
+			() -> acceptAll(this::classType, () -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), () -> accept(Terminal.NEW)),
+			() -> acceptAll(this::arrayType, () -> accept(Terminal.DOUBLE_COLON), () -> accept(Terminal.NEW))
+		));
+	}
+	private boolean methodReference_onlyPrimary() {
+		return accept(Nonterminal.METHOD_REFERENCE,
+			() -> acceptAll(this::primary, () -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier)
+		);
 	}
 	private boolean arrayCreationExpression() {
-		return accept(Nonterminal.ARRAY_CREATION_EXPRESSION, () -> acceptAny(() -> acceptAll(() -> accept(Terminal.NEW), this::primitiveType, this::dimExprs, () -> acceptOptional(this::dims)), () -> acceptAll(() -> accept(Terminal.NEW), this::classOrInterfaceType, this::dimExprs, () -> acceptOptional(this::dims)), () -> acceptAll(() -> accept(Terminal.NEW), this::primitiveType, this::dims, this::arrayInitializer), () -> acceptAll(() -> accept(Terminal.NEW), this::classOrInterfaceType, this::dims, this::arrayInitializer)));
+		return accept(Nonterminal.ARRAY_CREATION_EXPRESSION, () -> acceptAny(
+			() -> acceptAll(() -> accept(Terminal.NEW), this::primitiveType, this::dimExprs, () -> acceptOptional(this::dims)),
+			() -> acceptAll(() -> accept(Terminal.NEW), this::classOrInterfaceType, this::dimExprs, () -> acceptOptional(this::dims)),
+			() -> acceptAll(() -> accept(Terminal.NEW), this::primitiveType, this::dims, this::arrayInitializer),
+			() -> acceptAll(() -> accept(Terminal.NEW), this::classOrInterfaceType, this::dims, this::arrayInitializer)
+		));
 	}
 	private boolean dimExprs() {
 		return accept(Nonterminal.DIM_EXPRS, () -> acceptAll(this::dimExpr, () -> acceptRepeating(this::dimExpr)));
@@ -976,22 +1010,17 @@ public final class Parser extends MyProcess {
 	}
 	private boolean multiplicativeExpression() {
 		return accept(Nonterminal.MULTIPLICATIVE_EXPRESSION,
-			() -> acceptAll(this::unaryExpression,
-				() -> acceptRepeating(
-					() -> acceptAll(
-						() -> acceptAny(
-							() -> accept(Terminal.MULTIPLY),
-							() -> accept(Terminal.DIVIDE),
-							() -> accept(Terminal.MODULO)
-						),
-						this::unaryExpression
-					)
-				)
-			)
+			() -> acceptAll(this::unaryExpression, () -> acceptRepeating(() -> acceptAll(() -> acceptAny(Terminal.MULTIPLY, Terminal.DIVIDE, Terminal.MODULO), this::unaryExpression)))
 		);
 	}
 	private boolean unaryExpression() {
-		return accept(Nonterminal.UNARY_EXPRESSION, () -> acceptAny(this::preIncrementExpression, this::preDecrementExpression, () -> acceptAll(() -> accept(Terminal.ADD), this::unaryExpression), () -> acceptAll(() -> accept(Terminal.SUBTRACT), this::unaryExpression), this::unaryExpressionNotPlusMinus));
+		return accept(Nonterminal.UNARY_EXPRESSION, () -> acceptAny(
+			this::preIncrementExpression,
+			this::preDecrementExpression,
+			() -> acceptAll(() -> accept(Terminal.ADD), this::unaryExpression),
+			() -> acceptAll(() -> accept(Terminal.SUBTRACT), this::unaryExpression),
+			this::unaryExpressionNotPlusMinus
+		));
 	}
 	private boolean preIncrementExpression() {
 		return accept(Nonterminal.PRE_INCREMENT_EXPRESSION, () -> acceptAll(() -> accept(Terminal.INCREMENT), this::unaryExpression));
@@ -1000,7 +1029,12 @@ public final class Parser extends MyProcess {
 		return accept(Nonterminal.PRE_DECREMENT_EXPRESSION, () -> acceptAll(() -> accept(Terminal.DECREMENT), this::unaryExpression));
 	}
 	private boolean unaryExpressionNotPlusMinus() {
-		return accept(Nonterminal.UNARY_EXPRESSION_NOT_PLUS_MINUS, () -> acceptAny(this::postfixExpression, () -> acceptAll(() -> accept(Terminal.BITWISE_COMPLEMENT), this::unaryExpression), () -> acceptAll(() -> accept(Terminal.NOT), this::unaryExpression), this::castExpression));
+		return accept(Nonterminal.UNARY_EXPRESSION_NOT_PLUS_MINUS, () -> acceptAny(
+			this::postfixExpression,
+			() -> acceptAll(() -> accept(Terminal.BITWISE_COMPLEMENT), this::unaryExpression),
+			() -> acceptAll(() -> accept(Terminal.NOT), this::unaryExpression),
+			this::castExpression
+		));
 	}
 	private boolean postfixExpression() {
 		if (!(
@@ -1021,7 +1055,7 @@ public final class Parser extends MyProcess {
 			|| check(Terminal.SUPER)
 			|| check(Terminal.AT_SYMBOL)
 		)) { return false; }
-		return accept(Nonterminal.POSTFIX_EXPRESSION, () -> acceptAny(this::expressionName, this::postIncrementExpression, this::postDecrementExpression, this::primary));
+		return accept(Nonterminal.POSTFIX_EXPRESSION, () -> acceptAny(this::primary, this::expressionName, this::postIncrementExpression, this::postDecrementExpression));
 	}
 	private boolean postIncrementExpression() {
 		return lookAhead(1, Terminal.INCREMENT) && accept(Nonterminal.POST_INCREMENT_EXPRESSION, () -> acceptAll(this::postfixExpression, () -> accept(Terminal.INCREMENT)));
@@ -1034,5 +1068,64 @@ public final class Parser extends MyProcess {
 	}
 	private boolean constantExpression() {
 		return accept(Nonterminal.CONSTANT_EXPRESSION, this::expression);
+	}
+
+	private boolean primary() {
+		final NonterminalNode parentAtStart = currentParent;
+		currentParent = new NonterminalNode(Nonterminal.MY_ROOT);
+
+		boolean accepting = accept(Nonterminal.PRIMARY, () -> acceptAny(() ->
+			accept(Nonterminal.PRIMARY_NO_NEW_ARRAY, () -> acceptAny(
+				this::literal,
+				this::classLiteral,
+				() -> accept(Terminal.THIS),
+				() -> acceptAll(this::typeName, () -> accept(Terminal.DOT), () -> accept(Terminal.THIS)),
+				() -> acceptAll(() -> accept(Terminal.OPEN_PARENTHESIS), this::expression, () -> accept(Terminal.CLOSE_PARENTHESIS)),
+
+				this::classInstanceCreationExpression_noPrimary,
+				this::fieldAccess_noPrimary,
+				() -> accept(Nonterminal.ARRAY_ACCESS, () -> acceptAny(
+					() -> acceptAll(this::expressionName, () -> accept(Terminal.OPEN_BRACKET), this::expression, () -> accept(Terminal.CLOSE_BRACKET))
+				)),
+				this::methodInvocation_noPrimary,
+				this::methodReference_noPrimary
+			)),
+			this::arrayCreationExpression
+		));
+
+		if (!accepting)
+			return false;
+
+
+		NonterminalNode result = currentParent.getNonterminalChild(0);
+		while (true) {
+			boolean accepted = accept(Nonterminal.PRIMARY, () -> acceptAny(
+				() -> accept(Nonterminal.CLASS_INSTANCE_CREATION_EXPRESSION,
+					() -> acceptAll(() -> accept(Terminal.DOT), this::unqualifiedClassInstanceCreationExpression)
+				),
+				() -> accept(Nonterminal.METHOD_INVOCATION,
+					() -> acceptAll(() -> accept(Terminal.DOT), () -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS))
+				),
+				() -> accept(Nonterminal.FIELD_ACCESS,
+					() -> acceptAll(() -> accept(Terminal.DOT), this::identifier)
+				),
+				() -> accept(Nonterminal.METHOD_REFERENCE,
+					() -> acceptAll(() -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier)
+				)
+			));
+			if (accepted) {
+				final NonterminalNode x = currentParent.getNonterminalChild(currentParent.size() - 1);
+				x.add(0, result);
+				result = x;
+			} else {
+				break;
+			}
+		}
+
+		currentParent = parentAtStart;
+
+		currentParent.add(result);
+
+		return true;
 	}
 }
