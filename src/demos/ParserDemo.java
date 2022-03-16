@@ -17,7 +17,7 @@ public class ParserDemo {
 		//root.tighten();
 		System.out.println(root);
 		if (USE_DEBUG_UI) {
-			ParserDemoWithDebugUI.launch(args, parser.debugRoot);
+			// ParserDemoWithDebugUI.launch(args, parser.debugRoot);
 		}
 	}
 
