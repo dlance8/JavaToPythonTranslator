@@ -20,7 +20,9 @@ public final class Parser extends MyProcess {
 	private Token currentToken;
 
 	private void printProgress(String message) {
-		if (PRINT_PROGRESS) System.out.println(message);
+		if (PRINT_PROGRESS) {
+			System.out.println(message);
+		}
 	}
 
 	public Parser() {
@@ -30,12 +32,12 @@ public final class Parser extends MyProcess {
 		super(processManagementThread);
 	}
 
-	private interface NonterminalAcceptor { boolean accept(); }
+	private interface NonterminalAcceptor {
+		boolean accept();
+	}
 
 	private void parserError(String message) {
-		//super.error(message);
-		System.out.println("ERROR: " + message);
-		System.exit(1);
+		super.error(message);
 	}
 
 	public NonterminalNode parse(ArrayList<Token> tokens) {
@@ -44,9 +46,9 @@ public final class Parser extends MyProcess {
 		start();
 		try {
 			accept(this::compilationUnit);
-		} catch (NullPointerException e1) {
+		} catch (NullPointerException e) {
 			parserError("Failed in Parser: NullPointerException");
-		} catch (StackOverflowError e2) {
+		} catch (StackOverflowError e) {
 			parserError("Failed in Parser: StackOverflowError");
 		}
 
@@ -73,30 +75,17 @@ public final class Parser extends MyProcess {
 		return parsing && currentIndex + k < tokens.size() && tokens.get(currentIndex + k).getValue() == value;
 	}
 	private boolean lookAhead(Terminal... values) {
-		if (!(parsing && currentIndex + values.length < tokens.size())) return false;
-		for (int i = 0; i < values.length; ++i)
-			if (tokens.get(currentIndex + i).getValue() != values[i]) return false;
+		if (!(parsing && currentIndex + values.length < tokens.size())) {
+			return false;
+		}
+		for (int i = 0; i < values.length; ++i) {
+			if (tokens.get(currentIndex + i).getValue() != values[i]) {
+				return false;
+			}
+		}
 		return true;
 	}
 
-	private NonterminalNode acceptWithoutAdding(NonterminalAcceptor acceptor) {
-		final boolean parsingAtStart = parsing;
-		final int indexAtStart = currentIndex;
-		final NonterminalNode parentAtStart = currentParent;
-		final Token tokenAtStart = currentToken;
-		final boolean accepted = acceptor.accept();
-		if (accepted) {
-			NonterminalNode result = currentParent.getNonterminalChild(currentParent.size() - 1);
-			currentParent.remove(currentParent.size() - 1);
-			return result;
-		} else {
-			parsing = parsingAtStart;
-			currentIndex = indexAtStart;
-			currentParent = parentAtStart;
-			currentToken = tokenAtStart;
-			return null;
-		}
-	}
 	private boolean accept(Nonterminal value, NonterminalAcceptor acceptor) {
 		printProgress("Nonterminal\n\tvalue = " + value + "\n\tcurrentToken = " + currentToken.getText());
 
@@ -106,15 +95,19 @@ public final class Parser extends MyProcess {
 
 		final boolean accepted = accept(acceptor);
 
-		if (accepted)
+		if (accepted) {
 			parentAtStart.add(currentParent);
+		}
 		currentParent = parentAtStart;
 
 		return accepted;
 	}
 	private boolean acceptAny(Terminal... terminals) {
-		for (Terminal terminal : terminals)
-			if (accept(terminal)) return true;
+		for (Terminal terminal : terminals) {
+			if (accept(terminal)) {
+				return true;
+			}
+		}
 		return false;
 	}
 	private boolean acceptAny(NonterminalAcceptor... acceptors) {
@@ -125,8 +118,11 @@ public final class Parser extends MyProcess {
 	private boolean acceptAll(Terminal... terminals) {
 		final int childrenAtStart = currentParent.size();
 		final boolean accepted = accept(() -> {
-			for (Terminal terminal : terminals)
-				if (!accept(terminal)) return false;
+			for (Terminal terminal : terminals) {
+				if (!accept(terminal)) {
+					return false;
+				}
+			}
 			return true;
 		});
 		if (!accepted) {
@@ -139,8 +135,11 @@ public final class Parser extends MyProcess {
 	private boolean acceptAll(NonterminalAcceptor... acceptors) {
 		final int childrenAtStart = currentParent.size();
 		final boolean accepted = accept(() -> {
-			for (NonterminalAcceptor acceptor : acceptors)
-				if (!accept(acceptor)) return false;
+			for (NonterminalAcceptor acceptor : acceptors) {
+				if (!accept(acceptor)) {
+					return false;
+				}
+			}
 			return true;
 		});
 		if (!accepted) {
@@ -169,13 +168,19 @@ public final class Parser extends MyProcess {
 		return accepted;
 	}
 	private boolean acceptRepeating(Terminal value) {
-		while (true)
-			if (!accept(value)) break;
+		while (true) {
+			if (!accept(value)) {
+				break;
+			}
+		}
 		return true;
 	}
 	private boolean acceptRepeating(NonterminalAcceptor acceptor) {
-		while (true)
-			if (!accept(acceptor)) break;
+		while (true) {
+			if (!accept(acceptor)) {
+				break;
+			}
+		}
 		return true;
 	}
 	private boolean acceptOptional(Terminal value) {
@@ -566,33 +571,7 @@ public final class Parser extends MyProcess {
 		return accept(Nonterminal.SINGLE_ELEMENT_ANNOTATION, () -> acceptAll(() -> accept(Terminal.AT_SYMBOL), this::typeName, () -> accept(Terminal.OPEN_PARENTHESIS), this::elementValue, () -> accept(Terminal.CLOSE_PARENTHESIS)));
 	}
 	private boolean arrayInitializer() {
-		System.out.println("\nhere\n" + currentToken);
-		final boolean accepted = accept(Nonterminal.ARRAY_INITIALIZER,
-//			() -> acceptAll(
-//				() -> accept(Terminal.OPEN_BRACE),
-//				() -> acceptOptional(this::variableInitializerList),
-//				() -> acceptOptional(Terminal.COMMA),
-//				() -> accept(Terminal.CLOSE_BRACE)
-//			)
-			() -> {
-				System.out.println("X0\n" + currentToken);
-				if (!accept(Terminal.OPEN_BRACE))
-					return false;
-				System.out.println("X1\n" + currentToken);
-				if (!acceptOptional(this::variableInitializerList))
-					return false;
-				System.out.println("X2\n" + currentToken);
-				if (!acceptOptional(Terminal.COMMA))
-					return false;
-				System.out.println("X3\n" + currentToken);
-				if (!accept(Terminal.CLOSE_BRACE))
-					return false;
-				System.out.println("X4\n" + currentToken);
-				return true;
-			}
-		);
-		System.out.println("done");
-		return accepted;
+		return accept(Nonterminal.ARRAY_INITIALIZER, () -> acceptAll(() -> accept(Terminal.OPEN_BRACE), () -> acceptOptional(this::variableInitializerList), () -> acceptOptional(Terminal.COMMA), () -> accept(Terminal.CLOSE_BRACE)));
 	}
 	private boolean variableInitializerList() {
 		return accept(Nonterminal.VARIABLE_INITIALIZER_LIST, () -> acceptAll(this::variableInitializer, () -> acceptRepeating(() -> acceptAll(() -> accept(Terminal.COMMA), this::variableInitializer))));
@@ -607,11 +586,9 @@ public final class Parser extends MyProcess {
 		return accept(Nonterminal.BLOCK_STATEMENT, () -> acceptAny(this::localVariableDeclarationStatement, this::classDeclaration, this::statement));
 	}
 	private boolean localVariableDeclarationStatement() {
-		//System.out.println("1: LOCAL VARIABLE DECLARATION STATEMENT\n" + currentToken + "\n");
 		return accept(Nonterminal.LOCAL_VARIABLE_DECLARATION_STATEMENT, () -> acceptAll(this::localVariableDeclaration, () -> accept(Terminal.SEMICOLON)));
 	}
 	private boolean localVariableDeclaration() {
-		//System.out.println("2: LOCAL VARIABLE DECLARATION\n" + currentToken + "\n");
 		return accept(Nonterminal.LOCAL_VARIABLE_DECLARATION, () -> acceptAll(() -> acceptRepeating(this::variableModifier), this::unannType, this::variableDeclaratorList));
 	}
 	private boolean statement() {
@@ -855,18 +832,22 @@ public final class Parser extends MyProcess {
 		));
 	}
 	private boolean methodInvocation() {
-		return methodInvocation_noPrimary() || methodInvocation_onlyPrimary();
+		return methodInvocation_onlyPrimary() || methodInvocation_noPrimary();
 	}
 	private boolean methodInvocation_noPrimary() {
-		System.out.println(1);
-		final boolean accepted = accept(Nonterminal.METHOD_INVOCATION, () -> acceptAny(
+		return accept(Nonterminal.METHOD_INVOCATION, () -> acceptAny(
 			() -> acceptAll(this::methodName, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS)),
 			() -> acceptAll(this::typeName, () -> accept(Terminal.DOT), () -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS)),
 			() -> {
 				final boolean acceptedExpressionName = accept(Nonterminal.EXPRESSION_NAME, () -> {
 					boolean any = false;
-					while (acceptAll(this::identifier, () -> accept(Terminal.DOT)))
-						if (!any) any = true;
+					while (true) {
+						if (acceptAll(this::identifier, () -> accept(Terminal.DOT))) {
+							any = true;
+						} else {
+							break;
+						}
+					}
 					return any;
 				});
 				if (!acceptedExpressionName) {
@@ -881,18 +862,23 @@ public final class Parser extends MyProcess {
 			() -> acceptAll(() -> accept(Terminal.SUPER), () -> accept(Terminal.DOT), () -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS)),
 			() -> acceptAll(this::typeName, () -> accept(Terminal.DOT), () -> accept(Terminal.SUPER), () -> accept(Terminal.DOT), () -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS)))
 		);
-		System.out.println("1: " + accepted);
-		return accepted;
 	}
 	private boolean methodInvocation_onlyPrimary() {
-		System.out.println(2);
-		System.out.println(primary());
-		System.out.println(currentToken);
-		final boolean accepted = accept(Nonterminal.METHOD_INVOCATION, () ->
-			acceptAll(this::primary, () -> accept(Terminal.DOT), () -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS))
-		);
-		System.out.println("2: " + accepted);
-		return accepted;
+		return accept(Nonterminal.METHOD_INVOCATION, () -> {
+			boolean start = accept(this::primary);
+			if (!start)
+				return false;
+
+			final NonterminalNode primary = currentParent.getNonterminalChild(currentParent.size() - 1);
+
+			if (primary.size() == 1 && primary.get(0) instanceof NonterminalNode && primary.getNonterminalChild(0).getValue() == Nonterminal.METHOD_INVOCATION) {
+				currentParent.remove(currentParent.size() - 1);
+				currentParent.addAll(primary.getNonterminalChild(0));
+				return true;
+			}
+
+			return false;
+		});
 	}
 	private boolean argumentList() {
 		return accept(Nonterminal.ARGUMENT_LIST, () -> acceptAll(this::expression, () -> acceptRepeating(() -> acceptAll(() -> accept(Terminal.COMMA), this::expression))));
@@ -911,9 +897,7 @@ public final class Parser extends MyProcess {
 		));
 	}
 	private boolean methodReference_onlyPrimary() {
-		return accept(Nonterminal.METHOD_REFERENCE,
-			() -> acceptAll(this::primary, () -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier)
-		);
+		return accept(Nonterminal.METHOD_REFERENCE, () -> acceptAll(this::primary, () -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier));
 	}
 	private boolean arrayCreationExpression() {
 		return accept(Nonterminal.ARRAY_CREATION_EXPRESSION, () -> acceptAny(
@@ -1074,7 +1058,7 @@ public final class Parser extends MyProcess {
 		final NonterminalNode parentAtStart = currentParent;
 		currentParent = new NonterminalNode(Nonterminal.MY_ROOT);
 
-		boolean accepting = accept(Nonterminal.PRIMARY, () -> acceptAny(() ->
+		final boolean started = accept(Nonterminal.PRIMARY, () -> acceptAny(() ->
 			accept(Nonterminal.PRIMARY_NO_NEW_ARRAY, () -> acceptAny(
 				this::literal,
 				this::classLiteral,
@@ -1085,46 +1069,39 @@ public final class Parser extends MyProcess {
 				this::classInstanceCreationExpression_noPrimary,
 				this::fieldAccess_noPrimary,
 				() -> accept(Nonterminal.ARRAY_ACCESS, () -> acceptAny(
-					() -> acceptAll(this::expressionName, () -> accept(Terminal.OPEN_BRACKET), this::expression, () -> accept(Terminal.CLOSE_BRACKET))
-				)),
+					() -> acceptAll(this::expressionName, () -> accept(Terminal.OPEN_BRACKET), this::expression, () -> accept(Terminal.CLOSE_BRACKET)))),
 				this::methodInvocation_noPrimary,
 				this::methodReference_noPrimary
 			)),
 			this::arrayCreationExpression
 		));
 
-		if (!accepting)
+		if (!started)
 			return false;
 
 
 		NonterminalNode result = currentParent.getNonterminalChild(0);
 		while (true) {
-			boolean accepted = accept(Nonterminal.PRIMARY, () -> acceptAny(
+			final boolean accepted = accept(Nonterminal.PRIMARY, () -> acceptAny(
 				() -> accept(Nonterminal.CLASS_INSTANCE_CREATION_EXPRESSION,
-					() -> acceptAll(() -> accept(Terminal.DOT), this::unqualifiedClassInstanceCreationExpression)
-				),
+					() -> acceptAll(() -> accept(Terminal.DOT), this::unqualifiedClassInstanceCreationExpression)),
 				() -> accept(Nonterminal.METHOD_INVOCATION,
-					() -> acceptAll(() -> accept(Terminal.DOT), () -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS))
-				),
+					() -> acceptAll(() -> accept(Terminal.DOT), () -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS))),
 				() -> accept(Nonterminal.FIELD_ACCESS,
-					() -> acceptAll(() -> accept(Terminal.DOT), this::identifier)
-				),
+					() -> acceptAll(() -> accept(Terminal.DOT), this::identifier)),
 				() -> accept(Nonterminal.METHOD_REFERENCE,
-					() -> acceptAll(() -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier)
-				)
+					() -> acceptAll(() -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier))
 			));
 			if (accepted) {
-				final NonterminalNode x = currentParent.getNonterminalChild(currentParent.size() - 1);
-				x.add(0, result);
-				result = x;
+				final NonterminalNode newResult = currentParent.getNonterminalChild(currentParent.size() - 1);
+				newResult.getNonterminalChild(0).add(0, result);
+				result = newResult;
 			} else {
 				break;
 			}
 		}
 
-		currentParent = parentAtStart;
-
-		currentParent.add(result);
+		(currentParent = parentAtStart).add(result);
 
 		return true;
 	}
