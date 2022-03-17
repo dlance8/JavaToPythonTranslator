@@ -11,7 +11,11 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Scanner;
 public class MyApp extends Application {
 	private boolean javaIsSaved = true, pythonIsSaved = true;
@@ -44,7 +48,7 @@ public class MyApp extends Application {
 
 		MenuBar menuBar = new MenuBar();
 
-		// MENU 1/3
+		// Translate menu
 		Menu menu1 = new Menu("Translate");
 
 		MenuItem menu1a = new MenuItem("Translate");
@@ -52,14 +56,12 @@ public class MyApp extends Application {
 
 		menu1.getItems().addAll(menu1a);
 
-		// MENU 2/3
+		// Java file options menu
 		Menu menu2 = new Menu("Java File");
 
 		MenuItem menu2a = new MenuItem("New");
 		menu2a.setOnAction(e -> newJava());
 
-//		MenuItem menu2b = new MenuItem("New Window");
-//		menu2b.setOnAction(e -> new MyApp().launchNewWindow(new Stage()));
 
 		MenuItem menu2c = new MenuItem("Open");
 		menu2c.setOnAction(e -> openJava());
@@ -72,7 +74,7 @@ public class MyApp extends Application {
 
 		menu2.getItems().addAll(menu2a, menu2c, menu2d, menu2e);
 
-		// MENU 3/3
+		// Python file options menu
 		Menu menu3 = new Menu("Python File");
 
 		MenuItem menu3a = new MenuItem("Save");
@@ -83,7 +85,40 @@ public class MyApp extends Application {
 
 		menu3.getItems().addAll(menu3a, menu3b);
 
-		menuBar.getMenus().addAll(menu1, menu2, menu3);
+		// MENU 4
+		Menu menu4 = new Menu("Examples");
+
+		MenuItem ex1 = new MenuItem("Example 1");
+		File ex1file = new File("src/examples/classMethods.java");
+
+		MenuItem ex2 = new MenuItem("Example 2");
+		File ex2file = new File("src/examples/variableDeclaration.java");
+
+		MenuItem ex3 = new MenuItem("Example 3");
+		File ex3file = new File("src/examples/ifElse.java");
+
+		MenuItem ex4 = new MenuItem("Example 4");
+		File ex4file = new File("src/examples/whileLoops.java");
+
+		MenuItem ex5 = new MenuItem("Example 5");
+		File ex5file = new File("src/examples/boilerplateJavaFile.java");
+
+
+		ex1.setOnAction(e -> openExample(ex1file));
+		ex2.setOnAction(e -> openExample(ex2file));
+		ex3.setOnAction(e -> openExample(ex3file));
+		ex4.setOnAction(e -> openExample(ex4file));
+		ex5.setOnAction(e -> openExample(ex5file));
+
+		menu4.getItems().addAll(ex1, ex2, ex3, ex4, ex5);
+
+		// ADD ALL MENUS TO THE MENU BAR
+
+		menuBar.getMenus().addAll(menu1, menu2, menu3, menu4);
+
+
+
+
 
 		HBox hBox = new HBox();
 		hBox.getChildren().addAll(javaArea, pythonArea);
@@ -250,5 +285,13 @@ public class MyApp extends Application {
 		}
 		printWriter.print(text);
 		printWriter.close();
+	}
+
+
+
+	private void openExample(File example_file) {
+
+		javaArea.setText(readFile(example_file));
+
 	}
 }
