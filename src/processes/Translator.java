@@ -13,40 +13,30 @@ public class Translator extends MyProcess {
 		new Translator().translate(new Parser().parse(new Lexer().lexFromFile("src/MyTestClass.java")));
 	}
 
-	//test commit
 	private final StringBuilder indent = new StringBuilder();
 	private final StringBuilder out = new StringBuilder();
 
 	public Translator() {
 
 	}
-
 	public Translator(Thread processManagementThread) {
 		super(processManagementThread);
 	}
 
-	public String translate(NonterminalNode root) {
-		compilationUnit(root);
-		return out.toString();
-	}
-
+	// Methods for printing and indentation
 	private void print(String text) {
 		out.append(text);
 	}
-
 	private void println(String text) {
 		out.append(text).append('\n').append(indent);
 	}
-
 	private void increaseIndent() {
 		indent.append('\t');
 	}
-
 	private void decreaseIndent() {
 		if (indent.length() < 1) return;
 		indent.setLength(indent.length() - 1);
 	}
-
 	private void setIndent(int level) {
 		indent.setLength(0);
 		switch (level) {
@@ -74,6 +64,17 @@ public class Translator extends MyProcess {
 		}
 		//print("\n");
 		println("");
+	}
+
+
+	/**
+	 * -----------------------------------------------------------------------------------------------------------------
+	 * TRANSLATION STARTS HERE
+	 * -----------------------------------------------------------------------------------------------------------------
+	 */
+	public String translate(NonterminalNode root) {
+		compilationUnit(root);
+		return out.toString();
 	}
 
 	private void compilationUnit(NonterminalNode parent) {
