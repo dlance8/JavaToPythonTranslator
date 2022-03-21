@@ -4,7 +4,6 @@ import constants.Terminal;
 import datastructures.tree.NonterminalNode;
 import datastructures.tree.TerminalNode;
 import datastructures.tree.TreeNode;
-
 import static constants.Nonterminal.*;
 import static constants.Terminal.*;
 
@@ -17,7 +16,6 @@ public class Translator extends MyProcess {
 	private final StringBuilder out = new StringBuilder();
 
 	public Translator() {
-
 	}
 	public Translator(Thread processManagementThread) {
 		super(processManagementThread);
@@ -495,6 +493,12 @@ public class Translator extends MyProcess {
 		setIndent(2);
 		localVariableDeclaration(parent.getNonterminalChild(index));
 
+		index++;
+
+		if (parent.getTerminalChild(1).getText().equals(";")){
+			println("");
+		}
+
 		//setIndent(2);
 //		print(String.valueOf(indent.length()));
 //		increaseIndent();
@@ -613,7 +617,67 @@ public class Translator extends MyProcess {
 	private void forStatement(NonterminalNode parent) {
 		// ForStatement = BasicForStatement
 		//              | EnhancedForStatement ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+
+		NonterminalNode child = parent.getNonterminalChild(0);
+		if(child.getValue() == BASIC_FOR_STATEMENT){
+			basicForStatement(child);
+		}
+		else{
+			enhancedForStatement(child);
+		}
+
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
+	}
+
+	private void basicForStatement(NonterminalNode parent) {
+		// BasicForStatement = "for" , "(" , [ ForInit ] , ";" , [ Expression ] , ";" , [ ForUpdate ] , ")" , Statement ;
+
+		// is looping variable defined in the loop or before? variable declaration in [ ForInit ]
+		String className = "";
+
+		forInit(parent.getNonterminalChild(2));
+		println("");
+
+		print("while(");
+
+		expression(parent.getNonterminalChild(4));
+
+		print("):");
+		//increaseIndent()
+
+		setIndent(3);
+		statement(parent.getNonterminalChild(8), className);
+		forUpdate(parent.getNonterminalChild(6));
+
+	}
+
+	private void forUpdate(NonterminalNode parent) {
+		// ForUpdate = StatementExpressionList ;
+		statementExpressionList(parent.getNonterminalChild(0));
+
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
+	}
+
+	private void statementExpressionList(NonterminalNode parent) {
+		// StatementExpressionList = StatementExpression , { "," , StatementExpression } ;
+		String className = "";
+		statementExpression(parent.getNonterminalChild(0), className);
+
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
+	}
+
+	private void forInit(NonterminalNode parent) {
+		// ForInit = StatementExpressionList
+		//         | LocalVariableDeclaration ;
+
+		if(parent.getNonterminalChild(0).getValue() == STATEMENT_EXPRESSION_LIST){
+			statementExpressionList(parent.getNonterminalChild(0));
+		}
+		else{
+			localVariableDeclaration(parent.getNonterminalChild(0));
+		}
+
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 
 	private void labeledStatement(NonterminalNode parent) {
@@ -786,8 +850,12 @@ public class Translator extends MyProcess {
 	private void expressionStatement(NonterminalNode parent, String className) {
 		// ExpressionStatement = StatementExpression , ";" ;
 
-		statementExpression(parent.getNonterminalChild(0), className);
-
+		int index = 0;
+		statementExpression(parent.getNonterminalChild(index), className);
+		index++;
+		if(parent.getTerminalChild(index).getText().equals(";")){
+			println("");
+		}
 		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 
@@ -801,8 +869,80 @@ public class Translator extends MyProcess {
 		//                     | ClassInstanceCreationExpression ;
 
 		NonterminalNode child = parent.getNonterminalChild(0);
-		if (child.getValue() == METHOD_INVOCATION) {
-			methodInvocation(child, className);
+//		if (child.getValue() == METHOD_INVOCATION) {
+//			methodInvocation(child, className);
+//		}
+
+		switch(child.getValue()){
+			case METHOD_INVOCATION:
+				methodInvocation(child, className);
+				break;
+			case PRE_INCREMENT_EXPRESSION:
+				preIncrementExpression(child);
+				break;
+			case PRE_DECREMENT_EXPRESSION:
+				preDecrementExpression(child);
+				break;
+			case POST_INCREMENT_EXPRESSION:
+				postIncrementExpression(child);
+				break;
+			case POST_DECREMENT_EXPRESSION:
+				postDecrementExpression(child);
+				break;
+			case CLASS_INSTANCE_CREATION_EXPRESSION:
+				classInstanceCreationExpression(child);
+				break;
+
+		}
+
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
+	}
+
+	private void postIncrementExpression(NonterminalNode parent) {
+		// PostIncrementExpression = PostfixExpression , "++" ;
+
+		NonterminalNode child = parent.getNonterminalChild(0);
+		postfixExpression(child);
+
+		print(" += 1");
+
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
+	}
+
+	private void preIncrementExpression(NonterminalNode parent) {
+		// PreIncrementExpression = "++" , UnaryExpression ;
+
+		NonterminalNode child = parent.getNonterminalChild(1);
+		unaryExpression(child);
+
+		print(" += 1");
+
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
+	}
+
+	private void preDecrementExpression(NonterminalNode parent) {
+		// PreDecrementExpression = "--" , UnaryExpression ;
+		error("Nonterminal " + parent.getValue() + " is not supported.");
+	}
+
+	private void postfixExpression(NonterminalNode parent) {
+		// PostfixExpression = Primary
+		//                   | ExpressionName
+		//                   | PostIncrementExpression
+		//                   | PostDecrementExpression ;
+
+		NonterminalNode child = parent.getNonterminalChild(0);
+		if (child.getValue() == PRIMARY) {
+			primary(child);
+		}
+		if (child.getValue() == EXPRESSION_NAME) {
+			expressionName(child);
+		}
+		if (child.getValue() == POST_INCREMENT_EXPRESSION) {
+			postIncrementExpression(child);
+		}
+		if (child.getValue() == POST_DECREMENT_EXPRESSION) {
+			postDecrementExpression(child);
 		}
 		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
@@ -858,7 +998,8 @@ public class Translator extends MyProcess {
 					index++;
 				}
 				if (((TerminalNode) child).getValue() == Terminal.CLOSE_PARENTHESIS) {
-					print(")");
+					println(")");
+					//println("");
 					//setIndent(3);
 					//print(String.valueOf(indent.length()));
 					//increaseIndent();
@@ -868,7 +1009,9 @@ public class Translator extends MyProcess {
 
 					index++;
 				}
-			} else {
+			}
+
+			else {
 				index++;
 			}
 
@@ -1018,32 +1161,7 @@ public class Translator extends MyProcess {
 		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 
-	private void postfixExpression(NonterminalNode parent) {
-		// PostfixExpression = Primary
-		//                   | ExpressionName
-		//                   | PostIncrementExpression
-		//                   | PostDecrementExpression ;
 
-		NonterminalNode child = parent.getNonterminalChild(0);
-		if (child.getValue() == PRIMARY) {
-			primary(child);
-		}
-		if (child.getValue() == EXPRESSION_NAME) {
-			expressionName(child);
-		}
-		if (child.getValue() == POST_INCREMENT_EXPRESSION) {
-			postIncrementExpression(child);
-		}
-		if (child.getValue() == POST_DECREMENT_EXPRESSION) {
-			postDecrementExpression(child);
-		}
-		//error("Nonterminal " + parent.getValue() + " is not supported.");
-	}
-
-	private void postIncrementExpression(NonterminalNode parent) {
-		// PostIncrementExpression = PostfixExpression , "++" ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
-	}
 
 	private void postDecrementExpression(NonterminalNode parent) {
 		// PostDecrementExpression = PostfixExpression , "--" ;
@@ -1081,6 +1199,7 @@ public class Translator extends MyProcess {
 
 
 
+
 	private void assignment(NonterminalNode parent) {
 		// Assignment = LeftHandSide , AssignmentOperator , Expression ;
 		error("Nonterminal " + parent.getValue() + " is not supported.");
@@ -1103,14 +1222,7 @@ public class Translator extends MyProcess {
 
 		error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
-	private void preIncrementExpression(NonterminalNode parent) {
-		// PreIncrementExpression = "++" , UnaryExpression ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
-	}
-	private void preDecrementExpression(NonterminalNode parent) {
-		// PreDecrementExpression = "--" , UnaryExpression ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
-	}
+
 	private void castExpression(NonterminalNode parent) {
 		// CastExpression = "(" , PrimitiveType , ")" , UnaryExpression
 		//                | "(" , ReferenceType , { AdditionalBound } , ")" , UnaryExpressionNotPlusMinus
@@ -1555,27 +1667,14 @@ public class Translator extends MyProcess {
 		//                       | EnhancedForStatementNoShortIf ;
 		error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
-	private void basicForStatement(NonterminalNode parent) {
-		// BasicForStatement = "for" , "(" , [ ForInit ] , ";" , [ Expression ] , ";" , [ ForUpdate ] , ")" , Statement ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
-	}
+
 	private void basicForStatementNoShortIf(NonterminalNode parent) {
 		// BasicForStatementNoShortIf = "for" , "(" , [ ForInit ] , ";" , [ Expression ] , ";" , [ ForUpdate ] , ")" , StatementNoShortIf ;
 		error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
-	private void forInit(NonterminalNode parent) {
-		// ForInit = StatementExpressionList
-		//         | LocalVariableDeclaration ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
-	}
-	private void forUpdate(NonterminalNode parent) {
-		// ForUpdate = StatementExpressionList ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
-	}
-	private void statementExpressionList(NonterminalNode parent) {
-		// StatementExpressionList = StatementExpression , { "," , StatementExpression } ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
-	}
+
+
+
 	private void enhancedForStatement(NonterminalNode parent) {
 		// EnhancedForStatement = "for" , "(" , { VariableModifier } , UnannType , VariableDeclaratorId , ":" , Expression , ")" , Statement ;
 		error("Nonterminal " + parent.getValue() + " is not supported.");
