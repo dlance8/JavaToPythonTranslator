@@ -20,11 +20,15 @@ import java.util.Scanner;
 public class MyApp extends Application {
 	private boolean javaIsSaved = true, pythonIsSaved = true;
 	private File javaFile, pythonFile;
+	private File workingDirectory = new File(System.getProperty("user.dir"));
 	private Stage primaryStage;
+	private final FileChooser javaFileChooser = new FileChooser();
+	private final FileChooser pythonFileChooser = new FileChooser();
 
-	private final FileChooser javaFileChooser = new FileChooser(), pythonFileChooser = new FileChooser();
 	private final TextArea javaArea = new TextArea(), pythonArea = new TextArea();
 	private final Alert alert = new Alert(null, "Unsaved Java and Python code will be lost.", ButtonType.OK, ButtonType.CANCEL);
+
+
 
 	@Override
 	public void start(Stage primaryStage) {
@@ -37,6 +41,7 @@ public class MyApp extends Application {
 			allFiles = new FileChooser.ExtensionFilter("All Files", "*.*"),
 			javaFiles = new FileChooser.ExtensionFilter("Java Files", "*.java"),
 			pythonFiles = new FileChooser.ExtensionFilter("Python Files", "*.py");
+
 
 		javaFileChooser.setTitle("Choose a Java file:");
 		javaFileChooser.getExtensionFilters().addAll(javaFiles, allFiles);
@@ -212,6 +217,7 @@ public class MyApp extends Application {
 	private void openJava() {
 		if (confirmFails()) return; // Make sure the work is saved
 
+		javaFileChooser.setInitialDirectory(workingDirectory);
 		File file = javaFileChooser.showOpenDialog(primaryStage);
 		if (file != null) {
 			javaFile = file;
