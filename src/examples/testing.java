@@ -1,22 +1,28 @@
 package examples;
 
-public class testing {
-    private static void classMethod(){
+public class testing { // new line and set indent 1
+    private static void classMethod(){ // set indent 2
         System.out.println("World");
-    }
-    public static void main(String[] args){
-        int z = 3;
-        System.out.println("hello");
-        int y = 5;
-        classMethod();
+    } // set indent 1
+    public static void main(String[] args){ //set indent 2 and newline
+        int z = 3; // newline
+        System.out.println("hello"); //newline
+        int y = 5; //newline
+        classMethod(); //newline
 
-        int x = 4;
+        int x = 4; //new line
 
-        if(x < 5){
-            System.out.println("x < 5");
-        }
-        else {
-            System.out.println("x > 5");
-        }
+        if(x < 5){ // increaseIndent and newline
+            String a = "a";
+            System.out.println("x < 5"); // newline
+        } //decrease indent and newline
+        else { // increase indent and newline
+            String b = "b";
+            System.out.println("x > 5"); // newline
+        } //decrease indent and newline
+
+        for(int i = 0; i < 2; i++){ //increase indent and newline
+            System.out.println(i); //newline
+        }//decrease indent and newline
     }
 }

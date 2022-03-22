@@ -55,9 +55,9 @@ public class MyApp extends Application {
 
 		// Translate menu
 		Menu menu1 = new Menu("Translate");
-
 		MenuItem menu1a = new MenuItem("Translate");
 		menu1a.setOnAction(e -> translate());
+
 
 		menu1.getItems().addAll(menu1a);
 
@@ -93,19 +93,19 @@ public class MyApp extends Application {
 		// MENU 4
 		Menu menu4 = new Menu("Examples");
 
-		MenuItem ex1 = new MenuItem("Example 1");
+		MenuItem ex1 = new MenuItem("Class Methods");
 		File ex1file = new File("src/examples/classMethods.java");
 
-		MenuItem ex2 = new MenuItem("Example 2");
+		MenuItem ex2 = new MenuItem("Variable Declaration");
 		File ex2file = new File("src/examples/variableDeclaration.java");
 
-		MenuItem ex3 = new MenuItem("Example 3");
+		MenuItem ex3 = new MenuItem("If/else Statements");
 		File ex3file = new File("src/examples/ifElse.java");
 
-		MenuItem ex4 = new MenuItem("Example 4");
+		MenuItem ex4 = new MenuItem("Loops");
 		File ex4file = new File("src/examples/whileLoops.java");
 
-		MenuItem ex5 = new MenuItem("Example 5");
+		MenuItem ex5 = new MenuItem("Testing");
 		File ex5file = new File("src/examples/testing.java");
 
 

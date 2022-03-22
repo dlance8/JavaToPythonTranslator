@@ -6,9 +6,12 @@ public class ifElse {
         int x = 3;
 
         if (x < 4) {
+            String a = "a";
+            System.out.println("x <= 4");
         }
         else{
-            System.out.println("equal to 4");
+            String b = "b";
+            System.out.println("x >= 4");
         }
 
         System.out.println("test");
