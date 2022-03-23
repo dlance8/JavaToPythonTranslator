@@ -1023,6 +1023,17 @@ public class Translator extends MyProcess {
 		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 
+	private void postDecrementExpression(NonterminalNode parent) {
+		// PostDecrementExpression = PostfixExpression , "--" ;
+		int index = 0;
+		NonterminalNode child = parent.getNonterminalChild(index);
+		if (child.getValue() == POSTFIX_EXPRESSION){
+			postfixExpression(child);
+		}
+		index++;
+		print(" -= 1");
+	}
+
 	private void preIncrementExpression(NonterminalNode parent) {
 		// PreIncrementExpression = "++" , UnaryExpression ;
 
@@ -1036,7 +1047,8 @@ public class Translator extends MyProcess {
 
 	private void preDecrementExpression(NonterminalNode parent) {
 		// PreDecrementExpression = "--" , UnaryExpression ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+		unaryExpression(parent.getNonterminalChild(1));
+		print(" -= 1");
 	}
 
 	private void postfixExpression(NonterminalNode parent) {
@@ -1203,13 +1215,6 @@ public class Translator extends MyProcess {
 
 		postfixExpression(parent.getNonterminalChild(0));
 		//error("Nonterminal " + parent.getValue() + " is not supported.");
-	}
-
-
-
-	private void postDecrementExpression(NonterminalNode parent) {
-		// PostDecrementExpression = PostfixExpression , "--" ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 
 	private void primary(NonterminalNode parent) {

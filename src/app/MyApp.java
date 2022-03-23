@@ -90,8 +90,9 @@ public class MyApp extends Application {
 
 		menu3.getItems().addAll(menu3a, menu3b);
 
-		// MENU 4
+		// Examples menu
 		Menu menu4 = new Menu("Examples");
+		Menu subMenu = new Menu("Fundamentals");
 
 		MenuItem ex1 = new MenuItem("Class Methods");
 		File ex1file = new File("src/examples/classMethods.java");
@@ -102,11 +103,14 @@ public class MyApp extends Application {
 		MenuItem ex3 = new MenuItem("If/else Statements");
 		File ex3file = new File("src/examples/ifElse.java");
 
-		MenuItem ex4 = new MenuItem("Loops");
+		MenuItem ex4 = new MenuItem("While Loops");
 		File ex4file = new File("src/examples/whileLoops.java");
 
-		MenuItem ex5 = new MenuItem("Testing");
-		File ex5file = new File("src/examples/testing.java");
+		MenuItem ex5 = new MenuItem("For Loops");
+		File ex5file = new File("src/examples/forLoops.java");
+
+		MenuItem ex6 = new MenuItem("Testing");
+		File ex6file = new File("src/examples/testing.java");
 
 
 		ex1.setOnAction(e -> openExample(ex1file));
@@ -114,8 +118,10 @@ public class MyApp extends Application {
 		ex3.setOnAction(e -> openExample(ex3file));
 		ex4.setOnAction(e -> openExample(ex4file));
 		ex5.setOnAction(e -> openExample(ex5file));
+		ex6.setOnAction(e -> openExample(ex6file));
 
-		menu4.getItems().addAll(ex1, ex2, ex3, ex4, ex5);
+		subMenu.getItems().addAll(ex1, ex2, ex3, ex4, ex5);
+		menu4.getItems().addAll(subMenu, ex6);
 
 		// ADD ALL MENUS TO THE MENU BAR
 
@@ -292,11 +298,7 @@ public class MyApp extends Application {
 		printWriter.print(text);
 		printWriter.close();
 	}
-
-
-
 	private void openExample(File example_file) {
-
 		javaArea.setText(readFile(example_file));
 
 	}
