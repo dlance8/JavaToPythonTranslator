@@ -18,7 +18,7 @@ public class Translator extends MyProcess {
 
 	public Translator() {
 	}
-
+	
 	public Translator(Thread processManagementThread) {
 		super(processManagementThread);
 	}
@@ -136,6 +136,7 @@ public class Translator extends MyProcess {
 			}
 		}
 	}
+
 
 	private void importDeclaration(NonterminalNode parent) {
 		// ImportDeclaration = SingleTypeImportDeclaration
@@ -656,15 +657,15 @@ public class Translator extends MyProcess {
 				}
 				if(((NonterminalNode) child).getValue() == EXPRESSION){
 					expression(parent.getNonterminalChild(index));
-					println("):");
+					print("):");
 					index++;
 				}
 				if(((NonterminalNode) child).getValue() == FOR_UPDATE){
-					forUpdate(parent.getNonterminalChild(index));
+					//forUpdate(parent.getNonterminalChild(index));
 					index++;
 				}
 				if(((NonterminalNode) child).getValue() == STATEMENT){
-					statement(parent.getNonterminalChild(index), className);
+//					statement(parent.getNonterminalChild(index), className);
 					index++;
 				}
 			}
@@ -701,8 +702,13 @@ public class Translator extends MyProcess {
 //		print("):");
 //		//increaseIndent()
 //
-//		statement(parent.getNonterminalChild(8), className);
-//		forUpdate(parent.getNonterminalChild(6));
+		increaseIndent();
+		println("");
+		statement(parent.getNonterminalChild(8), className);
+		forUpdate(parent.getNonterminalChild(6));
+		decreaseIndent();
+		println("");
+
 
 	}
 
