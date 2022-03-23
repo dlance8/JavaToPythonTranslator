@@ -138,6 +138,7 @@ public class Translator extends MyProcess {
 		//                 | InterfaceDeclaration
 		//                 | ";" ;
 
+		//bars operate as or statements
 		if (parent.get(0) instanceof NonterminalNode) {
 			NonterminalNode child = parent.getNonterminalChild(0);
 			if (child.getValue() == Nonterminal.CLASS_DECLARATION) {
@@ -607,7 +608,9 @@ public class Translator extends MyProcess {
 
 	private void whileStatement(NonterminalNode parent) {
 		// WhileStatement = "while" , "(" , Expression , ")" , Statement ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+
+
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 
 	private void forStatement(NonterminalNode parent) {
@@ -1105,10 +1108,19 @@ public class Translator extends MyProcess {
 	}
 	private void preIncrementExpression(NonterminalNode parent) {
 		// PreIncrementExpression = "++" , UnaryExpression ;
+
+		NonterminalNode child = parent.getNonterminalChild(0);
+		if (child.getValue() == PRE_INCREMENT_EXPRESSION) {
+			preIncrementExpression(child);
+		}
 		error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void preDecrementExpression(NonterminalNode parent) {
 		// PreDecrementExpression = "--" , UnaryExpression ;
+		NonterminalNode child = parent.getNonterminalChild(0);
+		if (child.getValue() == PRE_DECREMENT_EXPRESSION) {
+			preDecrementExpression(child);
+		}
 		error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void castExpression(NonterminalNode parent) {
@@ -1544,6 +1556,48 @@ public class Translator extends MyProcess {
 	}
 	private void whileStatementNoShortIf(NonterminalNode parent) {
 		// WhileStatementNoShortIf = "while" , "(" , Expression , ")" , StatementNoShortIf ;
+
+		int index = 0;
+		while (index < parent.size()){
+			TreeNode child = parent.get(index);
+
+			if (child instanceof NonterminalNode){
+				if (((NonterminalNode) child).getValue() == EXPRESSION){
+					expression((NonterminalNode) child);
+					index++;
+				}
+				if (((NonterminalNode) child).getValue() == STATEMENT_NO_SHORT_IF) {
+					setIndent(3);
+					statementNoShortIf((NonterminalNode) child);
+					index++;
+				}
+			} else if (child instanceof TerminalNode){
+				if (((TerminalNode) child).getValue() == WHILE){
+					print("while");
+					index++;
+				}
+
+				if (((TerminalNode) child).getValue() == OPEN_PARENTHESIS){
+					print("(");
+					index++;
+				}
+				if (((TerminalNode) child).getValue() == CLOSE_PARENTHESIS) {
+					print("):");
+					index++;
+				}
+
+				if (((TerminalNode) child).getValue() == ELSE) {
+	               setIndent(2);
+				   print("else:");
+				   index++;
+				}
+				else {
+					index++;
+				}
+			}
+		}
+
+
 		error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void doStatement(NonterminalNode parent) {

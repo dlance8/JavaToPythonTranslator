@@ -13,7 +13,7 @@ public class ParserDemo {
 
 	public static void main(String[] args) {
 		Parser parser = new Parser();
-		NonterminalNode root = parser.parse(new Lexer().lexFromFile("src/examples/testing.java"));
+		NonterminalNode root = parser.parse(new Lexer().lexFromFile("src/examples/whileLoops.java"));
 		//root.tighten();
 		System.out.println(root);
 		if (USE_DEBUG_UI) {
