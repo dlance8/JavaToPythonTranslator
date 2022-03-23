@@ -28,8 +28,6 @@ public class MyApp extends Application {
 	private final TextArea javaArea = new TextArea(), pythonArea = new TextArea();
 	private final Alert alert = new Alert(null, "Unsaved Java and Python code will be lost.", ButtonType.OK, ButtonType.CANCEL);
 
-
-
 	@Override
 	public void start(Stage primaryStage) {
 
@@ -127,10 +125,6 @@ public class MyApp extends Application {
 
 		menuBar.getMenus().addAll(menu1, menu2, menu3, menu4);
 
-
-
-
-
 		HBox hBox = new HBox();
 		hBox.getChildren().addAll(javaArea, pythonArea);
 
@@ -151,7 +145,6 @@ public class MyApp extends Application {
 		Font font = Font.font("Monospaced", null, null, 20);
 		javaArea.setFont(font);
 		pythonArea.setFont(font);
-
 
 		Scene scene = new Scene(vBox, 1280, 720);
 
@@ -302,4 +295,6 @@ public class MyApp extends Application {
 		javaArea.setText(readFile(example_file));
 
 	}
+
+
 }

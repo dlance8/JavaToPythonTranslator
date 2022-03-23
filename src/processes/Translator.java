@@ -586,7 +586,6 @@ public class Translator extends MyProcess {
 		//           | WhileStatement
 		//           | ForStatement ;
 
-
 		NonterminalNode child = parent.getNonterminalChild(0);
 		if (child.getValue() == STATEMENT_WITHOUT_TRAILING_SUBSTATEMENT) {
 			statementWithoutTrailingSubstatement(child, className);
@@ -617,7 +616,22 @@ public class Translator extends MyProcess {
 
 	private void whileStatement(NonterminalNode parent) {
 		// WhileStatement = "while" , "(" , Expression , ")" , Statement ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+		String className = "";
+		int index = 0;
+		print("while");
+		index++;
+
+		print("(");
+		index++;
+
+		expression(parent.getNonterminalChild(index));
+		index++;
+
+		print("):");
+		index++;
+
+		statement(parent.getNonterminalChild(index), className);
+
 	}
 
 	private void forStatement(NonterminalNode parent) {
@@ -1046,7 +1060,8 @@ public class Translator extends MyProcess {
 	}
 
 	private void preDecrementExpression(NonterminalNode parent) {
-		// PreDecrementExpression = "--" , UnaryExpression ;
+		// PreDecrementExpression = "--" , UnaryExpression ;\
+		//
 		unaryExpression(parent.getNonterminalChild(1));
 		print(" -= 1");
 	}
@@ -1072,7 +1087,6 @@ public class Translator extends MyProcess {
 		}
 		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
-
 
 	private void expressionName(NonterminalNode parent) {
 		// ExpressionName = Identifier , { "." , Identifier } ;
@@ -1191,9 +1205,21 @@ public class Translator extends MyProcess {
 
 	private void multiplicativeExpression(NonterminalNode parent) {
 		// MultiplicativeExpression = UnaryExpression , { ( "*" | "/" | "%" ) , UnaryExpression } ;
-
-		unaryExpression(parent.getNonterminalChild(0));
-		//error("Nonterminal " + parent.getValue() + " is not supported.");
+		int index = 0;
+		while(index < parent.size()){
+			TreeNode child = parent.get(index);
+			if(child instanceof NonterminalNode){
+				unaryExpression((NonterminalNode) child);
+				index++;
+			}
+			else if(child instanceof TerminalNode){
+				print(((TerminalNode) child).getText());
+				index++;
+			}
+			else{
+				index++;
+			}
+		}
 	}
 
 	private void unaryExpression(NonterminalNode parent) {
