@@ -18,21 +18,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 public class MyApp extends Application {
-
-	// Class attributes
 	private boolean javaIsSaved = true, pythonIsSaved = true;
 	private File javaFile, pythonFile;
+	private File workingDirectory = new File(System.getProperty("user.dir"));
 	private Stage primaryStage;
+	private final FileChooser javaFileChooser = new FileChooser();
+	private final FileChooser pythonFileChooser = new FileChooser();
 
-	private final FileChooser javaFileChooser = new FileChooser(), pythonFileChooser = new FileChooser();
 	private final TextArea javaArea = new TextArea(), pythonArea = new TextArea();
 	private final Alert alert = new Alert(null, "Unsaved Java and Python code will be lost.", ButtonType.OK, ButtonType.CANCEL);
 
 
-	/**
-	 * Code for user interface
-	 * @param primaryStage
-	 */
+
 	@Override
 	public void start(Stage primaryStage) {
 
@@ -45,24 +42,22 @@ public class MyApp extends Application {
 			javaFiles = new FileChooser.ExtensionFilter("Java Files", "*.java"),
 			pythonFiles = new FileChooser.ExtensionFilter("Python Files", "*.py");
 
+
 		javaFileChooser.setTitle("Choose a Java file:");
 		javaFileChooser.getExtensionFilters().addAll(javaFiles, allFiles);
 
 		pythonFileChooser.setTitle("Choose a Python file:");
 		pythonFileChooser.getExtensionFilters().addAll(pythonFiles, allFiles);
 
-
-		// Vertical container for application
 		VBox vBox = new VBox();
 
-		// Menu bar to hold all of our menus(buttons)
 		MenuBar menuBar = new MenuBar();
 
 		// Translate menu
 		Menu menu1 = new Menu("Translate");
-
 		MenuItem menu1a = new MenuItem("Translate");
 		menu1a.setOnAction(e -> translate());
+
 
 		menu1.getItems().addAll(menu1a);
 
@@ -95,60 +90,69 @@ public class MyApp extends Application {
 
 		menu3.getItems().addAll(menu3a, menu3b);
 
-		// Load example files menu
+		// Examples menu
 		Menu menu4 = new Menu("Examples");
+		Menu subMenu = new Menu("Fundamentals");
 
-		MenuItem ex1 = new MenuItem("Example 1");
+		MenuItem ex1 = new MenuItem("Class Methods");
 		File ex1file = new File("src/examples/classMethods.java");
 
-		MenuItem ex2 = new MenuItem("Example 2");
+		MenuItem ex2 = new MenuItem("Variable Declaration");
 		File ex2file = new File("src/examples/variableDeclaration.java");
 
-		MenuItem ex3 = new MenuItem("Example 3");
+		MenuItem ex3 = new MenuItem("If/else Statements");
 		File ex3file = new File("src/examples/ifElse.java");
 
-		MenuItem ex4 = new MenuItem("Example 4");
+		MenuItem ex4 = new MenuItem("While Loops");
 		File ex4file = new File("src/examples/whileLoops.java");
 
-		MenuItem ex5 = new MenuItem("Example 5");
-		File ex5file = new File("src/examples/testing.java");
+		MenuItem ex5 = new MenuItem("For Loops");
+		File ex5file = new File("src/examples/forLoops.java");
+
+		MenuItem ex6 = new MenuItem("Testing");
+		File ex6file = new File("src/examples/testing.java");
+
 
 		ex1.setOnAction(e -> openExample(ex1file));
 		ex2.setOnAction(e -> openExample(ex2file));
 		ex3.setOnAction(e -> openExample(ex3file));
 		ex4.setOnAction(e -> openExample(ex4file));
 		ex5.setOnAction(e -> openExample(ex5file));
+		ex6.setOnAction(e -> openExample(ex6file));
 
-		menu4.getItems().addAll(ex1, ex2, ex3, ex4, ex5);
+		subMenu.getItems().addAll(ex1, ex2, ex3, ex4, ex5);
+		menu4.getItems().addAll(subMenu, ex6);
 
 		// ADD ALL MENUS TO THE MENU BAR
 
 		menuBar.getMenus().addAll(menu1, menu2, menu3, menu4);
 
 
-		// Horizontal container to hold text areas
+
+
+
 		HBox hBox = new HBox();
 		hBox.getChildren().addAll(javaArea, pythonArea);
 
-		// Add the menu bar and text areas to the vertical container
+		//pythonArea.setEditable(false);
+
 		vBox.getChildren().addAll(menuBar, hBox);
 
 		pythonArea.setEditable(false);
 
-		// Set text area dimensions
 		DoubleBinding textAreaWidth = primaryStage.widthProperty().divide(2);
 		DoubleBinding textAreaHeight = primaryStage.heightProperty().subtract(menuBar.heightProperty());
+
 		javaArea.prefWidthProperty().bind(textAreaWidth);
 		javaArea.prefHeightProperty().bind(textAreaHeight);
 		pythonArea.prefWidthProperty().bind(textAreaWidth);
 		pythonArea.prefHeightProperty().bind(textAreaHeight);
 
-		// Set fonts
 		Font font = Font.font("Monospaced", null, null, 20);
 		javaArea.setFont(font);
 		pythonArea.setFont(font);
 
-		// Set up scene
+
 		Scene scene = new Scene(vBox, 1280, 720);
 
 		scene.setOnKeyPressed(e -> {
@@ -160,6 +164,10 @@ public class MyApp extends Application {
 		primaryStage.setScene(scene);
 
 		primaryStage.show();
+
+//		javaFile = new File("C:/DistributedProject/examples.MyClass.java");
+//		javaArea.setText(readFile(javaFile));
+//		translate();
 
 		javaArea.textProperty().addListener((o, ov, nv)-> {
 			if (javaIsSaved) {
@@ -174,14 +182,6 @@ public class MyApp extends Application {
 			}
 		});
 	}
-
-	/**
-	 * Code for event handlers.
-	 * Defines read/write and button functionalities
-	 */
-
-
-	// Updates title of application when a java or python file is saved.
 	private void updateTitle() {
 		StringBuilder stringBuilder = new StringBuilder();
 		if (!javaIsSaved) {
@@ -206,15 +206,11 @@ public class MyApp extends Application {
 	private boolean confirmFails() {
 		return !(javaIsSaved && pythonIsSaved) && alert.showAndWait().get() != ButtonType.OK;
 	}
-
-	// Writes the translated python code to the python text area
 	private void translate() {
 		pythonArea.setText(new ProcessManager().go(javaArea.getText()));
 		pythonIsSaved = false;
 		updateTitle();
 	}
-
-	// Functionality for 'New Java File' button
 	private void newJava() {
 		if (confirmFails()) return; // Make sure the work is saved
 
@@ -224,11 +220,10 @@ public class MyApp extends Application {
 		javaIsSaved = pythonIsSaved = true;
 		updateTitle();
 	}
-
-	// Functionality for 'Open Java File' button
 	private void openJava() {
 		if (confirmFails()) return; // Make sure the work is saved
 
+		javaFileChooser.setInitialDirectory(workingDirectory);
 		File file = javaFileChooser.showOpenDialog(primaryStage);
 		if (file != null) {
 			javaFile = file;
@@ -237,8 +232,6 @@ public class MyApp extends Application {
 			updateTitle();
 		}
 	}
-
-	// Functionality for 'Save Java File' button
 	private void saveJava() {
 		if (javaFile == null) {
 			saveJavaAs();
@@ -248,8 +241,6 @@ public class MyApp extends Application {
 			updateTitle();
 		}
 	}
-
-	// Functionality for 'Save as Java File' button
 	private void saveJavaAs() {
 		final File selectedFile = javaFileChooser.showSaveDialog(primaryStage);
 		if (selectedFile != null) {
@@ -257,8 +248,6 @@ public class MyApp extends Application {
 			saveJava();
 		}
 	}
-
-	// Functionality for 'Save Python File' button
 	private void savePython() {
 		if (pythonFile == null) {
 			savePythonAs();
@@ -268,8 +257,6 @@ public class MyApp extends Application {
 			updateTitle();
 		}
 	}
-
-	// Functionality for 'Save Python File' button
 	private void savePythonAs() {
 		final File selectedFile = pythonFileChooser.showSaveDialog(primaryStage);
 		if (selectedFile != null) {
@@ -277,13 +264,6 @@ public class MyApp extends Application {
 			savePython();
 		}
 	}
-
-	/**
-	 * Reads a java file
-	 *
-	 * @param file
-	 * @return Stringbuilder object as String
-	 */
 	private String readFile(File file) {
 		Scanner scanner;
 		try {
@@ -306,7 +286,6 @@ public class MyApp extends Application {
 		}
 		return stringBuilder.toString();
 	}
-
 	private void writeFile(File file, String text) {
 		PrintWriter printWriter;
 		try {
@@ -319,10 +298,7 @@ public class MyApp extends Application {
 		printWriter.print(text);
 		printWriter.close();
 	}
-
-	// Functionality for 'Examples' button
 	private void openExample(File example_file) {
-
 		javaArea.setText(readFile(example_file));
 
 	}

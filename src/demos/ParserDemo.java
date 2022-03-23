@@ -9,11 +9,12 @@ import processes.Lexer;
 import processes.Parser;
 import datastructures.tree.NonterminalNode;
 public class ParserDemo {
+
 	private static final boolean USE_DEBUG_UI = false;
 
 	public static void main(String[] args) {
 		Parser parser = new Parser();
-		NonterminalNode root = parser.parse(new Lexer().lexFromFile("src/examples/whileLoops.java"));
+		NonterminalNode root = parser.parse(new Lexer().lexFromFile("src/examples/EvenOdd.java"));
 		//root.tighten();
 		System.out.println(root);
 		if (USE_DEBUG_UI) {
