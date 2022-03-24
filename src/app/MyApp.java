@@ -24,7 +24,6 @@ public class MyApp extends Application {
 	private Stage primaryStage;
 	private final FileChooser javaFileChooser = new FileChooser();
 	private final FileChooser pythonFileChooser = new FileChooser();
-
 	private final TextArea javaArea = new TextArea(), pythonArea = new TextArea();
 	private final Alert alert = new Alert(null, "Unsaved Java and Python code will be lost.", ButtonType.OK, ButtonType.CANCEL);
 
@@ -94,32 +93,35 @@ public class MyApp extends Application {
 
 		MenuItem ex1 = new MenuItem("Class Methods");
 		File ex1file = new File("src/examples/classMethods.java");
+		ex1.setOnAction(e -> openExample(ex1file));
 
 		MenuItem ex2 = new MenuItem("Variable Declaration");
 		File ex2file = new File("src/examples/variableDeclaration.java");
+		ex2.setOnAction(e -> openExample(ex2file));
 
 		MenuItem ex3 = new MenuItem("If/else Statements");
 		File ex3file = new File("src/examples/ifElse.java");
+		ex3.setOnAction(e -> openExample(ex3file));
 
 		MenuItem ex4 = new MenuItem("While Loops");
 		File ex4file = new File("src/examples/whileLoops.java");
+		ex4.setOnAction(e -> openExample(ex4file));
 
 		MenuItem ex5 = new MenuItem("For Loops");
 		File ex5file = new File("src/examples/forLoops.java");
+		ex5.setOnAction(e -> openExample(ex5file));
 
 		MenuItem ex6 = new MenuItem("Testing");
 		File ex6file = new File("src/examples/testing.java");
-
-
-		ex1.setOnAction(e -> openExample(ex1file));
-		ex2.setOnAction(e -> openExample(ex2file));
-		ex3.setOnAction(e -> openExample(ex3file));
-		ex4.setOnAction(e -> openExample(ex4file));
-		ex5.setOnAction(e -> openExample(ex5file));
 		ex6.setOnAction(e -> openExample(ex6file));
 
+		MenuItem program1 = new MenuItem("EvenOdd");
+		File evenOdd = new File("src/examples/EvenOdd.java");
+		program1.setOnAction(e -> openExample(evenOdd));
+
 		subMenu.getItems().addAll(ex1, ex2, ex3, ex4, ex5);
-		menu4.getItems().addAll(subMenu, ex6);
+
+		menu4.getItems().addAll(subMenu, ex6, program1);
 
 		// ADD ALL MENUS TO THE MENU BAR
 
