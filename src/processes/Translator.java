@@ -20,9 +20,12 @@ public class Translator extends MyProcess {
 	private final StringBuilder out = new StringBuilder();
 
 	Hashtable vars = new Hashtable();
+	/**
+	 * vars = {"myVar1" = "int", "myVar2 = "String"}
+	 */
 	private String declaredVarName;
 	private String declaredVarType;
-	private boolean isConditional = false;
+	private boolean needsToBeCasted;
 
 	public Translator() {
 	}
@@ -693,12 +696,14 @@ public class Translator extends MyProcess {
 		print("(");
 		index++;
 
-		expression(parent.getNonterminalChild(index));
+		needsToBeCasted = false;
+		expression(parent.getNonterminalChild(index));  // condition in while statement
 		index++;
 
 		print("):");
 		index++;
 
+		needsToBeCasted = true;
 		statement(parent.getNonterminalChild(index), className);
 
 	}
@@ -739,6 +744,7 @@ public class Translator extends MyProcess {
 					index++;
 				}
 				if(((NonterminalNode) child).getValue() == EXPRESSION){
+					needsToBeCasted = false;
 					expression(parent.getNonterminalChild(index));
 					print("):");
 					index++;
@@ -775,20 +781,13 @@ public class Translator extends MyProcess {
 
 		}
 
-//		forInit(parent.getNonterminalChild(2));
-//		println("");
-//
-//		print("while(");
-//
-//		expression(parent.getNonterminalChild(4));
-//
-//		print("):");
-//		//increaseIndent()
-//
 		increaseIndent();
 		println("");
+
 		statement(parent.getNonterminalChild(8), className);
+		needsToBeCasted = false;
 		forUpdate(parent.getNonterminalChild(6));
+
 		decreaseIndent();
 		println("");
 
@@ -888,9 +887,9 @@ public class Translator extends MyProcess {
 
 			if (child instanceof NonterminalNode) {
 				if (((NonterminalNode) child).getValue() == EXPRESSION) {
-					isConditional = true;
+					needsToBeCasted = true;
 					expression((NonterminalNode) child);
-					isConditional = false;
+					needsToBeCasted = false;
 					index++;
 				}
 				if (((NonterminalNode) child).getValue() == STATEMENT_NO_SHORT_IF) {
@@ -1096,6 +1095,8 @@ public class Translator extends MyProcess {
 	private void postIncrementExpression(NonterminalNode parent) {
 		// PostIncrementExpression = PostfixExpression , "++" ;
 
+		needsToBeCasted = false;
+
 		NonterminalNode child = parent.getNonterminalChild(0);
 		postfixExpression(child);
 
@@ -1117,7 +1118,6 @@ public class Translator extends MyProcess {
 
 	private void preIncrementExpression(NonterminalNode parent) {
 		// PreIncrementExpression = "++" , UnaryExpression ;
-
 		NonterminalNode child = parent.getNonterminalChild(1);
 		unaryExpression(child);
 
@@ -1158,13 +1158,12 @@ public class Translator extends MyProcess {
 	private void expressionName(NonterminalNode parent) {
 		// ExpressionName = Identifier , { "." , Identifier } ;
 
-
 		String exprName = parent.getTerminalChild(0).getText();
 		if (exprName.equals("System")) {
 			// do nothing
 		}
-		// if exprName is not a String and is not a conditional statement
-		else if(isConditional == false && vars.get(exprName).equals("int")){
+		// if exprName is not a conditional statement and not a String
+		else if(needsToBeCasted == true && vars.get(exprName).equals("int")){
 			print("str("+ exprName + ")");
 		}
 		else {
@@ -1965,6 +1964,31 @@ public class Translator extends MyProcess {
 
 
 // very important info below
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
