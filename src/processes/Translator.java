@@ -702,6 +702,8 @@ public class Translator extends MyProcess {
 
 		print("):");
 		index++;
+		increaseIndent();
+		println("");
 
 		needsToBeCasted = true;
 		statement(parent.getNonterminalChild(index), className);
