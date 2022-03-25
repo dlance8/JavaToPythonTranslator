@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="JavaToPythonTranslator:jar">
+    <output-path>$PROJECT_DIR$/out</output-path>
+    <root id="archive" name="JavaToPythonTranslator.jar">
+      <element id="module-output" name="JavaToPythonTranslator" />
+      <element id="file-copy" path="$PROJECT_DIR$/src/app/MyApp.java" />
+      <element id="dir-copy" path="$PROJECT_DIR$/src/examples" />
+    </root>
+  </artifact>
+</component>

@@ -1,14 +1,22 @@
 package app;
 import javafx.application.Application;
 import javafx.beans.binding.DoubleBinding;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+
+import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -17,6 +25,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
+import javafx.*;
+
+import javax.swing.*;
+
 public class MyApp extends Application {
 
 	// Class attributes
@@ -37,8 +49,9 @@ public class MyApp extends Application {
 	public void start(Stage primaryStage) {
 
 		this.primaryStage = primaryStage;
+		primaryStage.setTitle("Java To Python Translator ");
 
-		updateTitle();
+		//updateTitle();
 
 		final FileChooser.ExtensionFilter
 			allFiles = new FileChooser.ExtensionFilter("All Files", "*.*"),
@@ -52,6 +65,14 @@ public class MyApp extends Application {
 		pythonFileChooser.getExtensionFilters().addAll(pythonFiles, allFiles);
 
 
+		//Image j2pIcon = new Image (getClass().getResourceAsStream("src/examples/img.png"));
+		//JFrame jframe = new JFrame();
+		//jframe.setIconImage(new javafx.scene.image.Image());
+		//primaryStage.getIcons().add(j2pIcon);
+
+		//ImageIcon j2pIcon = new ImageIcon("src/examples/img.png");
+		//primaryStage.getIcons().
+
 		// Vertical container for application
 		VBox vBox = new VBox();
 
@@ -59,12 +80,12 @@ public class MyApp extends Application {
 		MenuBar menuBar = new MenuBar();
 
 		// Translate menu
-		Menu menu1 = new Menu("Translate");
+	/*	Menu menu1 = new Menu("Translate");
 
 		MenuItem menu1a = new MenuItem("Translate");
 		menu1a.setOnAction(e -> translate());
 
-		menu1.getItems().addAll(menu1a);
+		menu1.getItems().addAll(menu1a);*/
 
 		// Java file options menu
 		Menu menu2 = new Menu("Java File");
@@ -97,20 +118,20 @@ public class MyApp extends Application {
 
 		// Load example files menu
 		Menu menu4 = new Menu("Examples");
-
-		MenuItem ex1 = new MenuItem("Example 1");
+//Lesly
+		MenuItem ex1 = new MenuItem("Class Methods");
 		File ex1file = new File("src/examples/classMethods.java");
 
-		MenuItem ex2 = new MenuItem("Example 2");
+		MenuItem ex2 = new MenuItem("Variable Declaration");
 		File ex2file = new File("src/examples/variableDeclaration.java");
 
-		MenuItem ex3 = new MenuItem("Example 3");
+		MenuItem ex3 = new MenuItem("If-Else");
 		File ex3file = new File("src/examples/ifElse.java");
 
-		MenuItem ex4 = new MenuItem("Example 4");
+		MenuItem ex4 = new MenuItem("While Loops");
 		File ex4file = new File("src/examples/whileLoops.java");
 
-		MenuItem ex5 = new MenuItem("Example 5");
+		MenuItem ex5 = new MenuItem("Testing");
 		File ex5file = new File("src/examples/testing.java");
 
 		ex1.setOnAction(e -> openExample(ex1file));
@@ -120,10 +141,74 @@ public class MyApp extends Application {
 		ex5.setOnAction(e -> openExample(ex5file));
 
 		menu4.getItems().addAll(ex1, ex2, ex3, ex4, ex5);
+//Lesly
+		Menu menu5 = new Menu("Settings");
+		MenuItem zoomIn = new MenuItem("Zoom In");
+		MenuItem zoomOut = new MenuItem("Zoom Out");
+		Menu changeBackgroundmenu = new Menu("Change Background");
+		MenuItem lightBackground = new MenuItem("Light");
+
+		MenuItem darkBackground = new MenuItem("Dark");
+		menu5.getItems().addAll(zoomIn,zoomOut,changeBackgroundmenu);
+
+		zoomIn.setOnAction(event -> javaArea.setLayoutX(javaArea.getLayoutX() - 10));
+		zoomIn.setOnAction(event -> javaArea.setLayoutY(javaArea.getLayoutY() - 10));
+		zoomOut.setOnAction(event -> javaArea.setLayoutX(javaArea.getLayoutX() + 10));
+		zoomOut.setOnAction(event -> javaArea.setLayoutX(javaArea.getLayoutX() + 10));
+
+
+
+
+		zoomIn.getOnAction();
+		//File ex1file = new File("src/examples/README.md");
+
+		Menu menu6 = new Menu("Help");
+		MenuItem documentation = new MenuItem("Documentation");
+		File documentationfile = new File("src/examples/README.md");
+
+		MenuItem about = new MenuItem("About");
+		File aboutfile = new File("src/examples/README.md");
+
+		MenuItem reportBug = new MenuItem("Report Bug");
+		File reportBugfile = new File("src/examples/README.md");
+
+		documentation.setOnAction(e -> openExample(documentationfile));
+		about.setOnAction(e -> openExample(aboutfile));
+		reportBug.setOnAction(e -> openExample(reportBugfile));
+		//lightBackground.setOnAction(e -> javaArea.setBackground());
+		darkBackground.setOnAction(e -> javaArea.setBackground(new Background(new BackgroundFill(Color.BLACK,
+				CornerRadii.EMPTY, Insets.EMPTY))));
+		javaArea.setLayoutX(javaArea.getLayoutX() * 10);
+
+
+		changeBackgroundmenu.getItems().addAll(lightBackground,darkBackground);
+
+
+		menu6.getItems().addAll(documentation,about,reportBug);
+
+
+		MenuBar menuBar2 = new MenuBar();
+		menuBar2.getMenus().addAll(menu5, menu6);
+		menuBar2.setPrefWidth(600);
+		//menuBar2.setPrefHeight(600);
+
+
+
+
 
 		// ADD ALL MENUS TO THE MENU BAR
 
-		menuBar.getMenus().addAll(menu1, menu2, menu3, menu4);
+		menuBar.getMenus().addAll(menu2, menu3, menu4);
+
+		HBox hBoxMenu = new HBox();
+		Button translateButton = new Button("Translate");
+
+		/*translateButton.setTranslateX(30);
+		translateButton.setTranslateY(60);*/
+
+		translateButton.setOnAction(e -> translate());
+
+		hBoxMenu.getChildren().addAll(menuBar, translateButton, menuBar2);
 
 
 		// Horizontal container to hold text areas
@@ -131,7 +216,9 @@ public class MyApp extends Application {
 		hBox.getChildren().addAll(javaArea, pythonArea);
 
 		// Add the menu bar and text areas to the vertical container
-		vBox.getChildren().addAll(menuBar, hBox);
+		//vBox.getChildren().addAll(menuBar, hBox);
+		vBox.getChildren().addAll(hBoxMenu, hBox);
+
 
 		pythonArea.setEditable(false);
 

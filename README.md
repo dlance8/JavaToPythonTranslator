@@ -1,3 +1,0 @@
-# JavaToPythonTranslator
-
-// to do

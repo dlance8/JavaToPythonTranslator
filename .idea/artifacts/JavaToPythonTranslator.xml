@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="javafx" name="JavaToPythonTranslator">
+    <output-path>$PROJECT_DIR$/out/artifacts/JavaToPythonTranslator</output-path>
+    <root id="root">
+      <element id="archive" name="JavaToPythonTranslator.jar">
+        <element id="module-output" name="JavaToPythonTranslator" />
+      </element>
+    </root>
+  </artifact>
+</component>
