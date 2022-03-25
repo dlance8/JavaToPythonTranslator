@@ -886,12 +886,10 @@ public class Translator extends MyProcess {
 		String className = ""; //ignore
 		while (index < parent.size()) {
 			TreeNode child = parent.get(index);
-
 			if (child instanceof NonterminalNode) {
 				if (((NonterminalNode) child).getValue() == EXPRESSION) {
-					needsToBeCasted = true;
-					expression((NonterminalNode) child);
 					needsToBeCasted = false;
+					expression((NonterminalNode) child);
 					index++;
 				}
 				if (((NonterminalNode) child).getValue() == STATEMENT_NO_SHORT_IF) {
