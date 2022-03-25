@@ -17,6 +17,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
+import javafx.scene.control.Button;
+import java.awt.Desktop;
+
 public class MyApp extends Application {
 	private boolean javaIsSaved = true, pythonIsSaved = true;
 	private File javaFile, pythonFile;
@@ -50,6 +53,7 @@ public class MyApp extends Application {
 		VBox vBox = new VBox();
 
 		MenuBar menuBar = new MenuBar();
+		ButtonBar buttonbar = new ButtonBar();
 
 		// Translate menu
 		Menu menu1 = new Menu("Translate");
@@ -58,6 +62,12 @@ public class MyApp extends Application {
 
 
 		menu1.getItems().addAll(menu1a);
+
+		//Buttons for cmdline + idle
+		Button cmd = new Button("Command Line");
+		cmd.setOnAction(e ->commandLine());
+		Button idle = new Button("Idle");
+		idle.setOnAction(e -> runidle());
 
 		// Java file options menu
 		Menu menu2 = new Menu("Java File");
@@ -124,13 +134,15 @@ public class MyApp extends Application {
 		// ADD ALL MENUS TO THE MENU BAR
 
 		menuBar.getMenus().addAll(menu1, menu2, menu3, menu4);
+		buttonbar.getButtons().addAll(cmd, idle);
+
 
 		HBox hBox = new HBox();
 		hBox.getChildren().addAll(javaArea, pythonArea);
 
 		//pythonArea.setEditable(false);
 
-		vBox.getChildren().addAll(menuBar, hBox);
+		vBox.getChildren().addAll(menuBar, hBox, buttonbar);
 
 		pythonArea.setEditable(false);
 
@@ -175,6 +187,31 @@ public class MyApp extends Application {
 			}
 		});
 	}
+
+	private void commandLine() {
+		try {
+			Runtime.getRuntime().exec(new String[] {"cmd", "/K", "Start"});
+		}
+		catch (Exception e)
+		{
+			System.out.println("An error has occurred");
+			e.printStackTrace();
+		}
+	}
+
+	private void runidle(){
+		try {
+			ProcessBuilder pb = new ProcessBuilder("cmd", "/c", "C:AppData\\Local\\Programs\\Python\\Python310\\IDLE.lnk");
+			Process process = pb.start();
+		}
+		catch (Exception e)
+		{
+			System.out.println("An error has occurred");
+			e.printStackTrace();
+		}
+	}
+
+
 	private void updateTitle() {
 		StringBuilder stringBuilder = new StringBuilder();
 		if (!javaIsSaved) {
