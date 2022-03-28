@@ -17,6 +17,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
+import javafx.scene.control.Button;
+import java.awt.Desktop;
+
 public class MyApp extends Application {
 	private boolean javaIsSaved = true, pythonIsSaved = true;
 	private File javaFile, pythonFile;
@@ -24,11 +27,8 @@ public class MyApp extends Application {
 	private Stage primaryStage;
 	private final FileChooser javaFileChooser = new FileChooser();
 	private final FileChooser pythonFileChooser = new FileChooser();
-
 	private final TextArea javaArea = new TextArea(), pythonArea = new TextArea();
 	private final Alert alert = new Alert(null, "Unsaved Java and Python code will be lost.", ButtonType.OK, ButtonType.CANCEL);
-
-
 
 	@Override
 	public void start(Stage primaryStage) {
@@ -52,6 +52,7 @@ public class MyApp extends Application {
 		VBox vBox = new VBox();
 
 		MenuBar menuBar = new MenuBar();
+		ButtonBar buttonbar = new ButtonBar();
 
 		// Translate menu
 		Menu menu1 = new Menu("Translate");
@@ -60,6 +61,12 @@ public class MyApp extends Application {
 
 
 		menu1.getItems().addAll(menu1a);
+
+		//Buttons for cmdline + idle
+		Button cmd = new Button("Command Line");
+		cmd.setOnAction(e ->commandLine());
+		Button idle = new Button("Idle");
+		idle.setOnAction(e -> runidle());
 
 		// Java file options menu
 		Menu menu2 = new Menu("Java File");
@@ -96,39 +103,40 @@ public class MyApp extends Application {
 
 		MenuItem ex1 = new MenuItem("Class Methods");
 		File ex1file = new File("src/examples/classMethods.java");
+		ex1.setOnAction(e -> openExample(ex1file));
 
 		MenuItem ex2 = new MenuItem("Variable Declaration");
 		File ex2file = new File("src/examples/variableDeclaration.java");
+		ex2.setOnAction(e -> openExample(ex2file));
 
 		MenuItem ex3 = new MenuItem("If/else Statements");
 		File ex3file = new File("src/examples/ifElse.java");
+		ex3.setOnAction(e -> openExample(ex3file));
 
 		MenuItem ex4 = new MenuItem("While Loops");
 		File ex4file = new File("src/examples/whileLoops.java");
+		ex4.setOnAction(e -> openExample(ex4file));
 
 		MenuItem ex5 = new MenuItem("For Loops");
 		File ex5file = new File("src/examples/forLoops.java");
+		ex5.setOnAction(e -> openExample(ex5file));
 
 		MenuItem ex6 = new MenuItem("Testing");
 		File ex6file = new File("src/examples/testing.java");
-
-
-		ex1.setOnAction(e -> openExample(ex1file));
-		ex2.setOnAction(e -> openExample(ex2file));
-		ex3.setOnAction(e -> openExample(ex3file));
-		ex4.setOnAction(e -> openExample(ex4file));
-		ex5.setOnAction(e -> openExample(ex5file));
 		ex6.setOnAction(e -> openExample(ex6file));
 
+		MenuItem program1 = new MenuItem("EvenOdd");
+		File evenOdd = new File("src/examples/EvenOdd.java");
+		program1.setOnAction(e -> openExample(evenOdd));
+
 		subMenu.getItems().addAll(ex1, ex2, ex3, ex4, ex5);
-		menu4.getItems().addAll(subMenu, ex6);
+
+		menu4.getItems().addAll(subMenu, ex6, program1);
 
 		// ADD ALL MENUS TO THE MENU BAR
 
 		menuBar.getMenus().addAll(menu1, menu2, menu3, menu4);
-
-
-
+		buttonbar.getButtons().addAll(cmd, idle);
 
 
 		HBox hBox = new HBox();
@@ -136,7 +144,7 @@ public class MyApp extends Application {
 
 		//pythonArea.setEditable(false);
 
-		vBox.getChildren().addAll(menuBar, hBox);
+		vBox.getChildren().addAll(menuBar, hBox, buttonbar);
 
 		pythonArea.setEditable(false);
 
@@ -151,7 +159,6 @@ public class MyApp extends Application {
 		Font font = Font.font("Monospaced", null, null, 20);
 		javaArea.setFont(font);
 		pythonArea.setFont(font);
-
 
 		Scene scene = new Scene(vBox, 1280, 720);
 
@@ -182,6 +189,31 @@ public class MyApp extends Application {
 			}
 		});
 	}
+
+	private void commandLine() {
+		try {
+			Runtime.getRuntime().exec(new String[] {"cmd", "/K", "Start"});
+		}
+		catch (Exception e)
+		{
+			System.out.println("An error has occurred");
+			e.printStackTrace();
+		}
+	}
+
+	private void runidle(){
+		try {
+			ProcessBuilder pb = new ProcessBuilder("cmd", "/c", "C:AppData\\Local\\Programs\\Python\\Python310\\IDLE.lnk");
+			Process process = pb.start();
+		}
+		catch (Exception e)
+		{
+			System.out.println("An error has occurred");
+			e.printStackTrace();
+		}
+	}
+
+
 	private void updateTitle() {
 		StringBuilder stringBuilder = new StringBuilder();
 		if (!javaIsSaved) {
@@ -302,4 +334,6 @@ public class MyApp extends Application {
 		javaArea.setText(readFile(example_file));
 
 	}
+
+
 }

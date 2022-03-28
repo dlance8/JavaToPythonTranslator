@@ -1,0 +1,26 @@
+The grammar for each node is commented under its corresponding functions in translator.java
+For example:
+
+    private void compilationUnit(NonterminalNode parent){
+        // CompilationUnit = [ PackageDeclaration ] , { ImportDeclaration } , { TypeDeclaration } ;
+    }
+
+Nodes with "" surround them are Terminal nodes (e.g. a variable name or value). Translations usually happen here.
+    // "for", "while", "Hello World"
+
+Nodes with nothing surround them are Nonterminal nodes. (e.g. Variable declaration or class declaration)
+    // MethodDeclarator
+
+Nodes with [] indicate that it may appear once, or not at all
+    // [ PackageDeclaration ]
+
+Nodes with {} indicate that it is repeating ("can occur multiple times")
+    // { ImportDeclaration }
+
+Grammar including a | indicates "or"
+    // BlockStatement = LocalVariableDeclarationStatement
+    		//                | ClassDeclaration
+    		//                | Statement ;
+
+
+
