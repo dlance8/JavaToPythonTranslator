@@ -1037,11 +1037,6 @@ public class Translator extends MyProcess {
 		//                  | "super" , "." , [ TypeArguments ] , Identifier , "(" , [ArgumentList ] , ")"
 		//                  | TypeName , "." , "super" , "." , [ TypeArguments ] , Identifier , "(" , [ArgumentList ] , ")" ;
 
-//		if (indent.length() > 2) {
-//			// maintain current indent
-//		} else {
-//			// set to default indent for method invocation
-//		}
 		int index = 0;
 		while (index < parent.size()) {
 			TreeNode child = parent.get(index);
@@ -1083,12 +1078,13 @@ public class Translator extends MyProcess {
 					print(")");
 					index++;
 				}
+				if (((TerminalNode) child).getValue() == Terminal.IDENTIFIER){
+				}
 			}
 
 			else {
 				index++;
 			}
-
 		}
 	}
 
@@ -1162,6 +1158,7 @@ public class Translator extends MyProcess {
 		if (exprName.equals("System")) {
 			// do nothing
 		}
+
 		// if exprName is not a conditional statement and not a String
 		else if(needsToBeCasted == true && vars.get(exprName).equals("int")){
 			print("str("+ exprName + ")");
@@ -1335,14 +1332,19 @@ public class Translator extends MyProcess {
 		//                   | ArrayAccess
 		//                   | MethodInvocation
 		//                   | MethodReference ;
+		String className = "";
 
-
-		String literal = parent.getTerminalChild(0).getText();
-		print(literal);
-
+		TreeNode child = parent.get(0);
+		if(child instanceof TerminalNode){
+			String literal = parent.getTerminalChild(0).getText();
+			print(literal);
+			}
+		else if(child instanceof NonterminalNode){
+			if(((NonterminalNode) child).getValue() == METHOD_INVOCATION){
+				methodInvocation((NonterminalNode) child, className);
+			}
+		}
 	}
-
-
 
 
 	private void assignment(NonterminalNode parent) {
@@ -1484,7 +1486,9 @@ public class Translator extends MyProcess {
 	}
 	private void singleTypeImportDeclaration(NonterminalNode parent) {
 		// SingleTypeImportDeclaration = "import" , TypeName , ";" ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+
+		// do nothing for now, may need to keep track of imports
+
 	}
 	private void typeImportOnDemandDeclaration(NonterminalNode parent) {
 		// TypeImportOnDemandDeclaration = "import" , PackageOrTypeName , "." , "*" , ";" ;
