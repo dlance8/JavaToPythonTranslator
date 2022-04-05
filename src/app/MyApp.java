@@ -1,4 +1,5 @@
 package app;
+import com.sun.webkit.WebPage;
 import javafx.application.Application;
 import javafx.beans.binding.DoubleBinding;
 import javafx.geometry.Insets;
@@ -9,18 +10,21 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebEvent;
+import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.awt.*;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.URI;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,15 +47,14 @@ public class MyApp extends Application {
 
 	/**
 	 * Code for user interface
-	 * @param primaryStage
+	 * @param
 	 */
 	@Override
 	public void start(Stage primaryStage) {
 
 		this.primaryStage = primaryStage;
 		primaryStage.setTitle("Java To Python Translator ");
-
-		//updateTitle();
+		primaryStage.getIcons().add(new Image("examples/img_1.png"));
 
 		final FileChooser.ExtensionFilter
 			allFiles = new FileChooser.ExtensionFilter("All Files", "*.*"),
@@ -65,27 +68,12 @@ public class MyApp extends Application {
 		pythonFileChooser.getExtensionFilters().addAll(pythonFiles, allFiles);
 
 
-		//Image j2pIcon = new Image (getClass().getResourceAsStream("src/examples/img.png"));
-		//JFrame jframe = new JFrame();
-		//jframe.setIconImage(new javafx.scene.image.Image());
-		//primaryStage.getIcons().add(j2pIcon);
-
-		//ImageIcon j2pIcon = new ImageIcon("src/examples/img.png");
-		//primaryStage.getIcons().
 
 		// Vertical container for application
 		VBox vBox = new VBox();
 
 		// Menu bar to hold all of our menus(buttons)
 		MenuBar menuBar = new MenuBar();
-
-		// Translate menu
-	/*	Menu menu1 = new Menu("Translate");
-
-		MenuItem menu1a = new MenuItem("Translate");
-		menu1a.setOnAction(e -> translate());
-
-		menu1.getItems().addAll(menu1a);*/
 
 		// Java file options menu
 		Menu menu2 = new Menu("Java File");
@@ -151,38 +139,50 @@ public class MyApp extends Application {
 		MenuItem darkBackground = new MenuItem("Dark");
 		menu5.getItems().addAll(zoomIn,zoomOut,changeBackgroundmenu);
 
-		zoomIn.setOnAction(event -> javaArea.setLayoutX(javaArea.getLayoutX() - 10));
-		zoomIn.setOnAction(event -> javaArea.setLayoutY(javaArea.getLayoutY() - 10));
-		zoomOut.setOnAction(event -> javaArea.setLayoutX(javaArea.getLayoutX() + 10));
-		zoomOut.setOnAction(event -> javaArea.setLayoutX(javaArea.getLayoutX() + 10));
+
+		StringBuffer st = new StringBuffer("-fx-font-size:20");
+
+		zoomIn.setOnAction(event -> {
+			String st3 = st.substring(14,16);
+			Integer x = Integer.parseInt(st3) + 5;
+			st.replace(14,16,x.toString());
+
+			javaArea.setStyle(st.toString());
+		});
+
+		zoomOut.setOnAction(event -> {
+			String st3 = st.substring(14,16);
+			Integer x = Integer.parseInt(st3) - 5;
+			st.replace(14,16,x.toString());
+
+			javaArea.setStyle(st.toString());
+		});
 
 
 
 
-		zoomIn.getOnAction();
-		//File ex1file = new File("src/examples/README.md");
 
 		Menu menu6 = new Menu("Help");
 		MenuItem documentation = new MenuItem("Documentation");
 		File documentationfile = new File("src/examples/README.md");
 
 		MenuItem about = new MenuItem("About");
-		File aboutfile = new File("src/examples/README.md");
+		File aboutfile = new File("src/examples/classMethods.java");
 
 		MenuItem reportBug = new MenuItem("Report Bug");
-		File reportBugfile = new File("src/examples/README.md");
+
+		//File reportBugfile = new File("https://github.com/Lesly412/IntegerArray_withTarget/issues");;
 
 		documentation.setOnAction(e -> openExample(documentationfile));
 		about.setOnAction(e -> openExample(aboutfile));
-		reportBug.setOnAction(e -> openExample(reportBugfile));
-		//lightBackground.setOnAction(e -> javaArea.setBackground());
-		darkBackground.setOnAction(e -> javaArea.setBackground(new Background(new BackgroundFill(Color.BLACK,
-				CornerRadii.EMPTY, Insets.EMPTY))));
-		javaArea.setLayoutX(javaArea.getLayoutX() * 10);
+		//ERROR @here :
+		// reportBug.setOnAction(e -> 	new URL("https://github.com/Lesly412/IntegerArray_withTarget/issues"));
 
+		String lightStyle = javaArea.getStyle();
+		darkBackground.setOnAction(e ->javaArea.setStyle("-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #000000; -fx-text-fill: #00ff00; "));
+		lightBackground.setOnAction(e ->javaArea.setStyle(lightStyle));
 
 		changeBackgroundmenu.getItems().addAll(lightBackground,darkBackground);
-
 
 		menu6.getItems().addAll(documentation,about,reportBug);
 
@@ -193,18 +193,11 @@ public class MyApp extends Application {
 		//menuBar2.setPrefHeight(600);
 
 
-
-
-
 		// ADD ALL MENUS TO THE MENU BAR
 
 		menuBar.getMenus().addAll(menu2, menu3, menu4);
-
 		HBox hBoxMenu = new HBox();
 		Button translateButton = new Button("Translate");
-
-		/*translateButton.setTranslateX(30);
-		translateButton.setTranslateY(60);*/
 
 		translateButton.setOnAction(e -> translate());
 
@@ -216,7 +209,6 @@ public class MyApp extends Application {
 		hBox.getChildren().addAll(javaArea, pythonArea);
 
 		// Add the menu bar and text areas to the vertical container
-		//vBox.getChildren().addAll(menuBar, hBox);
 		vBox.getChildren().addAll(hBoxMenu, hBox);
 
 
