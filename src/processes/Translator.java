@@ -371,6 +371,7 @@ public class  Translator extends MyProcess {
 					index++;
 				}
 				else if(((NonterminalNode) child).getValue() == FORMAL_PARAMETER_LIST){
+					print(",");
 					formalParameterList((NonterminalNode) child);
 					index++;
 				}
@@ -387,8 +388,70 @@ public class  Translator extends MyProcess {
 			}
 		}
 	}
+	private void formalParameterList(NonterminalNode parent) {
+		// FormalParameterList = FormalParameters , [ "," , LastFormalParameter ] ;
+		formalParameters(parent.getNonterminalChild(0));
+
+	}
+	private void formalParameters(NonterminalNode parent) {
+		// FormalParameters = FormalParameter , { "," , FormalParameter }
+		//                  | ReceiverParameter , { "," , FormalParameter } ;
+
+		int index = 0;
+		TreeNode child;
+		while(index < parent.size()){
+			child = parent.get(index);
+			if(child instanceof NonterminalNode){
+				if(((NonterminalNode) child).getValue() == FORMAL_PARAMETER){
+					formalParameter((NonterminalNode) child);
+					index++;
+				}
+				else if(((NonterminalNode) child).getValue() == RECEIVER_PARAMETER){
+					// do nothing
+					index++;
+				}
+			}
+			else if(child instanceof TerminalNode){
+				if(((TerminalNode) child).getText().equals(",")){
+					print(",");
+					index++;
+				}
+			}
+			else{
+				error("Nonterminal " + parent.getValue() + " is not supported.");
+			}
+		}
+
+
+	}
+	private void formalParameter(NonterminalNode parent) {
+		// FormalParameter = { VariableModifier } , UnannType , VariableDeclaratorId ;
+
+		int index = 0;
+		NonterminalNode child;
+		while(index < parent.size()){
+			child = parent.getNonterminalChild(index);
+			if(child.getValue() == VARIABLE_MODIFIER){
+				variableModifier(child);
+				index++;
+			}
+			else if(child.getValue() == UNANN_TYPE){
+				unannType(child);
+				index++;
+			}
+			else if(child.getValue() == VARIABLE_DECLARATOR_ID){
+				variableDeclaratorId(child);
+				index++;
+			}
+			else{
+				index++;
+			}
+		}
+	}
 	private void constructorBody(NonterminalNode parent) {
 		// ConstructorBody = "{" , [ ExplicitConstructorInvocation ] , [ BlockStatements ] , "}" ;
+
+		constructorBody = true;
 		if(parent.size() > 2){
 			setIndentWithNewline(2);
 			//print("self.");
@@ -403,7 +466,7 @@ public class  Translator extends MyProcess {
 					index++;
 				}
 				else if(((NonterminalNode) child).getValue() == BLOCK_STATEMENTS){
-					constructorBody = true;
+					//constructorBody = true;
 					blockStatements((NonterminalNode) child);
 					index++;
 				}
@@ -1242,7 +1305,53 @@ public class  Translator extends MyProcess {
 			error("Nonterminal " + parent.getValue() + " is not supported.");
 		}
 	}
-
+	private void unqualifiedClassInstanceCreationExpression(NonterminalNode parent) {
+		// UnqualifiedClassInstanceCreationExpression = "new" , [ TypeArguments ] , ClassOrInterfaceTypeToInstantiate , "(" , [ ArgumentList ] , ")" , [ ClassBody ] ;
+		int index = 0;
+		TreeNode child;
+		while(index < parent.size()){
+			child = parent.get(index);
+			if(child instanceof TerminalNode){
+				if(((TerminalNode) child).getText().equals("new")){
+					// do nothing
+					index++;
+				}
+				if(((TerminalNode) child).getText().equals("(")){
+					print("(");
+					index++;
+				}
+				if(((TerminalNode) child).getText().equals(")")){
+					print(")");
+					index++;
+				}
+			}
+			else if(child instanceof NonterminalNode){
+				if(((NonterminalNode) child).getValue() == TYPE_ARGUMENTS){
+					index++;
+				}
+				if(((NonterminalNode) child).getValue() == CLASS_OR_INTERFACE_TYPE_TO_INSTANTIATE){
+					classOrInterfaceTypeToInstantiate((NonterminalNode) child);
+					index++;
+				}
+				if(((NonterminalNode) child).getValue() == ARGUMENT_LIST){
+					argumentList((NonterminalNode) child);
+					index++;
+				}
+				if(((NonterminalNode) child).getValue() == CLASS_BODY){
+					classBody((NonterminalNode) child);
+					index++;
+				}
+			}
+			else{
+				index++;
+			}
+		}
+	}
+	private void classOrInterfaceTypeToInstantiate(NonterminalNode parent) {
+		// ClassOrInterfaceTypeToInstantiate = { Annotation } , Identifier , { "." , { Annotation } , Identifier } , [ TypeArgumentsOrDiamond ] ;
+		//print(className + "()");
+		print(className);
+	}
 	private void methodInvocation(NonterminalNode parent) {
 		//                  | TypeName , "." , [ TypeArguments ] , Identifier , "(" , [ ArgumentList ] , ")"
 		//                  | ExpressionName , "." , [ TypeArguments ] , Identifier , "(" , [ArgumentList ] , ")"
@@ -1367,9 +1476,9 @@ public class  Translator extends MyProcess {
 		if (exprName.equals("System")) {
 			// do nothing
 		}
-		else if(constructorBody == true){
-			print("self." + exprName);
-		}
+//		else if(constructorBody == true){
+//			print("self." + exprName);
+//		}
 
 		else if(parent.size() > 1){
 			print(parent.getTerminalChild(0).getText());
@@ -1388,9 +1497,24 @@ public class  Translator extends MyProcess {
 
 	private void argumentList(NonterminalNode parent) {
 		// ArgumentList = Expression , { "," , Expression } ;
+		int index = 0;
+		TreeNode child;
+		while(index < parent.size()){
+			child = parent.get(index);
+			if(child instanceof TerminalNode){
+				print(",");
+				index++;
+			}
+			else if(child instanceof NonterminalNode){
+				expression((NonterminalNode) child);
+				index++;
+			}
+			else{
+				index++;
+			}
+		}
+		//expression(parent.getNonterminalChild(0));
 
-		expression(parent.getNonterminalChild(0));
-		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 
 	private void expression(NonterminalNode parent) {
@@ -1636,7 +1760,13 @@ public class  Translator extends MyProcess {
 		//              | ArrayAccess ;
 		NonterminalNode child = parent.getNonterminalChild(0);
 		if(child.getValue() == EXPRESSION_NAME){
-			expressionName(child);
+			if(constructorBody == true){
+				print("self.");
+				expressionName(child);
+			}
+			else{
+				expressionName(child);
+			}
 		}
 		else{
 			error("Nonterminal " + parent.getValue() + " is not supported.");
@@ -1793,19 +1923,8 @@ public class  Translator extends MyProcess {
 		error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 
-	private void formalParameterList(NonterminalNode parent) {
-		// FormalParameterList = FormalParameters , [ "," , LastFormalParameter ] ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
-	}
-	private void formalParameters(NonterminalNode parent) {
-		// FormalParameters = FormalParameter , { "," , FormalParameter }
-		//                  | ReceiverParameter , { "," , FormalParameter } ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
-	}
-	private void formalParameter(NonterminalNode parent) {
-		// FormalParameter = { VariableModifier } , UnannType , VariableDeclaratorId ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
-	}
+
+
 	private void variableModifier(NonterminalNode parent) {
 		// VariableModifier = Annotation | "final" ;
 		error("Nonterminal " + parent.getValue() + " is not supported.");
@@ -2110,15 +2229,8 @@ public class  Translator extends MyProcess {
 		//              | "void" , "." , "class" ;
 		error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
-	private void unqualifiedClassInstanceCreationExpression(NonterminalNode parent) {
-		// UnqualifiedClassInstanceCreationExpression = "new" , [ TypeArguments ] , ClassOrInterfaceTypeToInstantiate , "(" , [ ArgumentList ] , ")" , [ ClassBody ] ;
 
-		classOrInterfaceTypeToInstantiate(parent.getNonterminalChild(1));
-	}
-	private void classOrInterfaceTypeToInstantiate(NonterminalNode parent) {
-		// ClassOrInterfaceTypeToInstantiate = { Annotation } , Identifier , { "." , { Annotation } , Identifier } , [ TypeArgumentsOrDiamond ] ;
-		print(className + "()");
-	}
+
 	private void typeArgumentsOrDiamond(NonterminalNode parent) {
 		// TypeArgumentsOrDiamond = TypeArguments
 		//                        | "<" , ">" ;
