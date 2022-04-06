@@ -124,11 +124,15 @@ public class MyApp extends Application {
 		File ex6file = new File("src/examples/testing.java");
 		ex6.setOnAction(e -> openExample(ex6file));
 
+		MenuItem ex7 = new MenuItem("Objects");
+		File ex7file = new File("src/examples/objects.java");
+		ex7.setOnAction(e -> openExample(ex7file));
+
 		MenuItem program1 = new MenuItem("EvenOdd");
 		File evenOdd = new File("src/examples/EvenOdd.java");
 		program1.setOnAction(e -> openExample(evenOdd));
 
-		subMenu.getItems().addAll(ex1, ex2, ex3, ex4, ex5);
+		subMenu.getItems().addAll(ex1, ex2, ex3, ex4, ex5, ex7);
 
 		menu4.getItems().addAll(subMenu, ex6, program1);
 
