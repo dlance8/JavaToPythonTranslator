@@ -9,10 +9,8 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
+
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,6 +27,7 @@ public class MyApp extends Application {
 	private final FileChooser pythonFileChooser = new FileChooser();
 	private final TextArea javaArea = new TextArea(), pythonArea = new TextArea();
 	private final Alert alert = new Alert(null, "Unsaved Java and Python code will be lost.", ButtonType.OK, ButtonType.CANCEL);
+	private String pythonSaveLocation;
 
 	@Override
 	public void start(Stage primaryStage) {
@@ -192,7 +191,26 @@ public class MyApp extends Application {
 
 	private void commandLine() {
 		try {
+			//System.out.println(pythonSaveLocation);
 			Runtime.getRuntime().exec(new String[] {"cmd", "/K", "Start"});
+
+
+			/**
+			 * The code below runs the saved python file and prints the output to the console.
+			 * Haven't figured out how to get the saved code to run in command line.
+			 * Maybe we can have a seperate window pop up to display python output?
+			 */
+//			ProcessBuilder builder = new ProcessBuilder(
+//					"cmd.exe", "/c", "python " + pythonSaveLocation);
+//			builder.redirectErrorStream(true);
+//			Process p = builder.start();
+//			BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+//			String line;
+//			while (true) {
+//				line = r.readLine();
+//				if (line == null) { break; }
+//				System.out.println(line);
+//			}
 		}
 		catch (Exception e)
 		{
@@ -291,8 +309,10 @@ public class MyApp extends Application {
 	}
 	private void savePythonAs() {
 		final File selectedFile = pythonFileChooser.showSaveDialog(primaryStage);
+
 		if (selectedFile != null) {
 			pythonFile = selectedFile;
+			pythonSaveLocation = pythonFile.getPath();
 			savePython();
 		}
 	}

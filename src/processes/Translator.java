@@ -358,20 +358,27 @@ public class Translator extends MyProcess {
 		// MethodDeclaration = { MethodModifier } , MethodHeader , MethodBody ;
 
 		int index = 0;
+		NonterminalNode child;
+		while(index < parent.size()){
+			child = parent.getNonterminalChild(index);
+			if (child.getValue() == METHOD_MODIFIER){
+				methodModifier(child);
+				index++;
+			}
+			if (child.getValue() == METHOD_HEADER){
+				methodHeader(child);
+				index++;
+			}
+			if (child.getValue() == METHOD_BODY){
+				methodBody(child);
+				index++;
+			}
+		}
+//		NonterminalNode child = parent.getNonterminalChild(2);
+//		methodHeader(child);
+//		child = parent.getNonterminalChild(3);
+//		methodBody(child);
 
-//		println(parent.getNonterminalChild(0).toString());
-//		println(parent.getNonterminalChild(1).toString());
-//		println(parent.getNonterminalChild(2).toString());
-//		println(parent.getNonterminalChild(3).toString());
-
-		// don't care about method modifiers
-		NonterminalNode child = parent.getNonterminalChild(2);
-		methodHeader(child);
-		child = parent.getNonterminalChild(3);
-		methodBody(child);
-
-
-		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 
 	private void methodModifier(NonterminalNode parent) {
@@ -622,12 +629,12 @@ public class Translator extends MyProcess {
 		// UnannPrimitiveType = NumericType
 		//                    | "boolean" ;
 
-		NonterminalNode child = parent.getNonterminalChild(0);
-		if (child.getValue() == NUMERIC_TYPE){
-			numericType(child);
+		TreeNode child = parent.get(0);
+		if (child instanceof NonterminalNode){
+			numericType((NonterminalNode) child);
 		}
 		else{
-			// "boolean"?
+			// "boolean" do nothing
 		}
 	}
 	private void numericType(NonterminalNode parent) {
@@ -1231,7 +1238,6 @@ public class Translator extends MyProcess {
 			print(parent.getTerminalChild(0).getText());
 		}
 
-		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 
 	private void argumentList(NonterminalNode parent) {
@@ -1285,9 +1291,19 @@ public class Translator extends MyProcess {
 	}
 	private void equalityExpression(NonterminalNode parent) {
 		// EqualityExpression = RelationalExpression , { ( "==" | "!=" ) , RelationalExpression } ;
-
-		relationalExpression(parent.getNonterminalChild(0));
-		//error("Nonterminal " + parent.getValue() + " is not supported.");
+		int index = 0;
+		TreeNode child;
+		while(index < parent.size()){
+			child = parent.get(index);
+			if(child instanceof NonterminalNode){
+				relationalExpression((NonterminalNode) child);
+				index++;
+			}
+			else{
+				print(" " + ((TerminalNode) child).getText() + " ");
+				index++;
+			}
+		}
 	}
 	private void relationalExpression(NonterminalNode parent) {
 		// RelationalExpression = ShiftExpression , "instanceof" , ReferenceType
@@ -1404,13 +1420,58 @@ public class Translator extends MyProcess {
 		TreeNode child = parent.get(0);
 		if(child instanceof TerminalNode){
 			String literal = parent.getTerminalChild(0).getText();
-			print(literal);
+			if(literal.equals("true") || literal.equals("false")){
+				print(literal.substring(0, 1).toUpperCase() + literal.substring(1));
 			}
+			else{
+				print(literal);
+			}
+		}
 		else if(child instanceof NonterminalNode){
 			if(((NonterminalNode) child).getValue() == METHOD_INVOCATION){
 				methodInvocation((NonterminalNode) child);
 			}
+			if(((NonterminalNode) child).getValue() == ARRAY_ACCESS){
+				arrayAccess((NonterminalNode) child);
+			}
 		}
+	}
+
+	private void arrayAccess(NonterminalNode parent) {
+		// ArrayAccess = ExpressionName , "[" , Expression , "]"
+		//             | PrimaryNoNewArray , "[" , Expression , "]" ;
+
+		int index = 0;
+		TreeNode child;
+		while (index < parent.size()){
+			child = parent.get(index);
+			if(child instanceof NonterminalNode){
+				if(((NonterminalNode) child).getValue() == EXPRESSION_NAME){
+					expressionName((NonterminalNode) child);
+					index++;
+				}
+				if(((NonterminalNode) child).getValue() == EXPRESSION){
+					expression((NonterminalNode) child);
+					index++;
+				}
+				if(((NonterminalNode) child).getValue() == PRIMARY_NO_NEW_ARRAY){
+					primaryNoNewArray((NonterminalNode) child);
+					index++;
+				}
+			}
+			else if(child instanceof TerminalNode){
+				if(((TerminalNode) child).getText().equals("[")){
+					print("[");
+					index++;
+				}
+				else{
+					print("]");
+					index++;
+				}
+			}
+		}
+
+//		error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 
 
@@ -1926,11 +1987,7 @@ public class Translator extends MyProcess {
 		//             | TypeName , "." , "super" , "." , Identifier ;
 		error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
-	private void arrayAccess(NonterminalNode parent) {
-		// ArrayAccess = ExpressionName , "[" , Expression , "]"
-		//             | PrimaryNoNewArray , "[" , Expression , "]" ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
-	}
+
 	private void methodReference(NonterminalNode parent) {
 		// MethodReference = ExpressionName , "::" , [ TypeArguments ] , Identifier
 		//                 | ReferenceType , "::" , [ TypeArguments ] , Identifier
