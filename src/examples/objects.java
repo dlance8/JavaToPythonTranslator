@@ -9,6 +9,8 @@ public class objects {
         modelYear = year;
     }
     public static void main(String[] args){
+        System.out.println("Working with objects");
+        System.out.println("-------------------------------------");
         objects car1 = new objects("Mustang", 1969);
         objects car2 = new objects("Tesla Model 3", 2022);
 

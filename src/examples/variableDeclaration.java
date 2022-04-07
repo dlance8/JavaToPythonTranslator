@@ -6,5 +6,8 @@ public class variableDeclaration {
         String myStr = "hi";
         Double myDouble = 12.0;
         char myChar = 'c';
+
+        System.out.println(3 == 3);
+        System.out.println(3 != 3);
     }
 }

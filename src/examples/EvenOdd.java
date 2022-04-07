@@ -8,6 +8,5 @@ public class EvenOdd {
             System.out.println(num);
         else
             System.out.println(num);
-        String x = "x";
     }
 }

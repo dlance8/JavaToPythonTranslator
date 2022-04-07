@@ -237,24 +237,24 @@ public class  Translator extends MyProcess {
 		classBody(parent.getNonterminalChild(index));
 
 
-		println("");
-		setIndentWithNewline(0);
-		//println("");
-		print("#0 indent");
-
-
-		setIndentWithNewline(1);
-		//println("");
-		print("#1 indent");
-
-
-		setIndentWithNewline(2);
-		//println("");
-		print("#2 indent");
-
-		setIndentWithNewline(3);
-		//println("");
-		print("#3 indent");
+//		println("");
+//		setIndentWithNewline(0);
+//		//println("");
+//		print("#0 indent");
+//
+//
+//		setIndentWithNewline(1);
+//		//println("");
+//		print("#1 indent");
+//
+//
+//		setIndentWithNewline(2);
+//		//println("");
+//		print("#2 indent");
+//
+//		setIndentWithNewline(3);
+//		//println("");
+//		print("#3 indent");
 
 
 	}
@@ -848,7 +848,7 @@ public class  Translator extends MyProcess {
 	}
 	private void floatingPointType(NonterminalNode parent) {
 		// FloatingPointType = "float" | "double" ;
-		error("Nonterminal " + parent.getValue() + " is not supported.");
+		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void unannReferenceType(NonterminalNode parent) {
 		// UnannReferenceType = UnannArrayType
@@ -1655,8 +1655,25 @@ public class  Translator extends MyProcess {
 		//                 | "-" , UnaryExpression
 		//                 | UnaryExpressionNotPlusMinus ;
 
+//		int index = 0;
+//		NonterminalNode child = parent.getNonterminalChild(0);
+//		if (parent.size() == 1){
+//			if (child.getValue() == PRE_INCREMENT_EXPRESSION){
+//				preIncrementExpression(child);
+//			}
+//			if (child.getValue() == PRE_DECREMENT_EXPRESSION){
+//				preDecrementExpression(child);
+//			}
+//			if (child.getValue() == UNARY_EXPRESSION_NOT_PLUS_MINUS){
+//				unaryExpressionNotPlusMinus(child);
+//			}
+//		}
+//		else{
+//			print(parent.getTerminalChild(0).getText());
+//			unaryExpressionNotPlusMinus(parent.getNonterminalChild(1));
+//		}
+
 		unaryExpressionNotPlusMinus(parent.getNonterminalChild(0));
-		//error("Nonterminal " + parent.getValue() + " is not supported.");
 	}
 	private void unaryExpressionNotPlusMinus(NonterminalNode parent) {
 		// UnaryExpressionNotPlusMinus = PostfixExpression

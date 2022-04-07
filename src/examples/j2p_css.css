@@ -1,0 +1,34 @@
+body {
+  color: red;
+  text-align: center;
+  background-color: lightblue;
+
+}
+div{
+ text-align: justify;
+}
+img{
+       max-width: 30%;
+       height: auto
+
+}
+#myHeader{
+   text-align: left;
+   font-size: 70px;
+}
+#FirstP{
+     text-align: left;
+      font-size: 30px;
+     color: green;
+
+}
+#SecondP{
+     text-align: left;
+       font-size: 30px;
+       color: purple;
+}
+#ThirdP{
+       text-align: left;
+       font-size: 30px;
+       color: blue;
+}

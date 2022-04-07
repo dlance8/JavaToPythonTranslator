@@ -1,28 +1,42 @@
 package app;
 import javafx.application.Application;
 import javafx.beans.binding.DoubleBinding;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextArea;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebEvent;
+import javafx.scene.web.WebView;
+import javafx.stage.FileChooser;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
+import java.awt.*;
 import java.io.*;
+import java.util.Scanner;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Scanner;
-import javafx.scene.control.Button;
-import java.awt.Desktop;
+import javafx.*;
 
 public class MyApp extends Application {
+
 	private boolean javaIsSaved = true, pythonIsSaved = true;
 	private File javaFile, pythonFile;
 	private File workingDirectory = new File(System.getProperty("user.dir"));
 	private Stage primaryStage;
+
 	private final FileChooser javaFileChooser = new FileChooser();
 	private final FileChooser pythonFileChooser = new FileChooser();
 	private final TextArea javaArea = new TextArea(), pythonArea = new TextArea();
@@ -33,8 +47,11 @@ public class MyApp extends Application {
 	public void start(Stage primaryStage) {
 
 		this.primaryStage = primaryStage;
+		primaryStage.setTitle("Java to Python Translator");
+		primaryStage.getIcons().add(new Image("examples/img_1.png"));
 
-		updateTitle();
+
+		//updateTitle();
 
 		final FileChooser.ExtensionFilter
 			allFiles = new FileChooser.ExtensionFilter("All Files", "*.*"),
@@ -48,57 +65,86 @@ public class MyApp extends Application {
 		pythonFileChooser.setTitle("Choose a Python file:");
 		pythonFileChooser.getExtensionFilters().addAll(pythonFiles, allFiles);
 
-		VBox vBox = new VBox();
 
+		VBox vBox = new VBox();
 		MenuBar menuBar = new MenuBar();
 		ButtonBar buttonbar = new ButtonBar();
 
-		// Translate menu
-		Menu menu1 = new Menu("Translate");
-		MenuItem menu1a = new MenuItem("Translate");
-		menu1a.setOnAction(e -> translate());
+		/**
+		 * Java Menu
+		 */
+		Menu jMenu = new Menu("Java File");
+		MenuItem jMenu_New = new MenuItem("New");
+		jMenu_New.setOnAction(e -> newJava());
 
+		MenuItem jMenu_Open = new MenuItem("Open");
+		jMenu_Open.setOnAction(e -> openJava());
 
-		menu1.getItems().addAll(menu1a);
+		MenuItem jMenu_Save = new MenuItem("Save");
+		jMenu_Save.setOnAction(e -> saveJava());
 
-		//Buttons for cmdline + idle
-		Button cmd = new Button("Command Line");
+		MenuItem jMenu_SaveAs = new MenuItem("Save As");
+		jMenu_SaveAs.setOnAction(e -> saveJavaAs());
+
+		jMenu.getItems().addAll(jMenu_New, jMenu_Open, jMenu_Save, jMenu_SaveAs);
+
+		/**
+		 * Translate Menu
+		 */
+//		Menu menu1 = new Menu("Translate");
+//		MenuItem menu1a = new MenuItem("Translate");
+//		menu1a.setOnAction(e -> translate());
+//
+//
+//		menu1.getItems().addAll(menu1a);
+
+		/**
+		 * Buttons for cmdline + idle
+		 */
+		Button cmd = new Button("Run");
 		cmd.setOnAction(e ->commandLine());
 		Button idle = new Button("Idle");
 		idle.setOnAction(e -> runidle());
 
+
 		// Java file options menu
-		Menu menu2 = new Menu("Java File");
+//		Menu menu2 = new Menu("Java File");
+//
+//		MenuItem menu2a = new MenuItem("New");
+//		menu2a.setOnAction(e -> newJava());
+//
+//
+//		MenuItem menu2c = new MenuItem("Open");
+//		menu2c.setOnAction(e -> openJava());
+//
+//		MenuItem menu2d = new MenuItem("Save");
+//		menu2d.setOnAction(e -> saveJava());
+//
+//		MenuItem menu2e = new MenuItem("Save As");
+//		menu2e.setOnAction(e -> saveJavaAs());
+//
+//		menu2.getItems().addAll(menu2a, menu2c, menu2d, menu2e);
 
-		MenuItem menu2a = new MenuItem("New");
-		menu2a.setOnAction(e -> newJava());
+		/**
+		 * Python file options menu
+		 */
+		Menu pyMenu = new Menu("Python File");
 
+		MenuItem pMenu_Save = new MenuItem("Save");
+		pMenu_Save.setOnAction(e -> savePython());
 
-		MenuItem menu2c = new MenuItem("Open");
-		menu2c.setOnAction(e -> openJava());
+		MenuItem pMenu_SaveAs = new MenuItem("Save As");
+		pMenu_SaveAs.setOnAction(e -> savePythonAs());
 
-		MenuItem menu2d = new MenuItem("Save");
-		menu2d.setOnAction(e -> saveJava());
+		pyMenu.getItems().addAll(pMenu_Save, pMenu_SaveAs);
 
-		MenuItem menu2e = new MenuItem("Save As");
-		menu2e.setOnAction(e -> saveJavaAs());
+		/**
+		 * Examples Menu
+		 */
 
-		menu2.getItems().addAll(menu2a, menu2c, menu2d, menu2e);
+		Menu exMenu = new Menu("Examples");
 
-		// Python file options menu
-		Menu menu3 = new Menu("Python File");
-
-		MenuItem menu3a = new MenuItem("Save");
-		menu3a.setOnAction(e -> savePython());
-
-		MenuItem menu3b = new MenuItem("Save As");
-		menu3b.setOnAction(e -> savePythonAs());
-
-		menu3.getItems().addAll(menu3a, menu3b);
-
-		// Examples menu
-		Menu menu4 = new Menu("Examples");
-		Menu subMenu = new Menu("Fundamentals");
+		//Menu subMenu = new Menu("Fundamentals");
 
 		MenuItem ex1 = new MenuItem("Class Methods");
 		File ex1file = new File("src/examples/classMethods.java");
@@ -120,34 +166,97 @@ public class MyApp extends Application {
 		File ex5file = new File("src/examples/forLoops.java");
 		ex5.setOnAction(e -> openExample(ex5file));
 
-		MenuItem ex6 = new MenuItem("Testing");
-		File ex6file = new File("src/examples/testing.java");
-		ex6.setOnAction(e -> openExample(ex6file));
+//		MenuItem ex6 = new MenuItem("Testing");
+//		File ex6file = new File("src/examples/testing.java");
+//		ex6.setOnAction(e -> openExample(ex6file));
 
 		MenuItem ex7 = new MenuItem("Objects");
 		File ex7file = new File("src/examples/objects.java");
 		ex7.setOnAction(e -> openExample(ex7file));
 
-		MenuItem program1 = new MenuItem("EvenOdd");
-		File evenOdd = new File("src/examples/EvenOdd.java");
-		program1.setOnAction(e -> openExample(evenOdd));
+//		MenuItem program1 = new MenuItem("EvenOdd");
+//		File evenOdd = new File("src/examples/EvenOdd.java");
+//		program1.setOnAction(e -> openExample(evenOdd));
 
-		subMenu.getItems().addAll(ex1, ex2, ex3, ex4, ex5, ex7);
+//		subMenu.getItems().addAll(ex1, ex2, ex3, ex4, ex5, ex7);
 
-		menu4.getItems().addAll(subMenu, ex6, program1);
+		exMenu.getItems().addAll(ex1, ex2, ex3, ex4, ex5, ex7);
+
+		/**
+		 * Settings Menu
+		 */
+
+		Menu settingsMenu = new Menu("Settings");
+		MenuItem zoomIn = new MenuItem("Zoom In");
+		MenuItem zoomOut = new MenuItem("Zoom Out");
+		Menu changeBackgroundmenu = new Menu("Change Background");
+		MenuItem lightBackground = new MenuItem("Light");
+		MenuItem darkBackground = new MenuItem("Dark");
+		settingsMenu.getItems().addAll(zoomIn,zoomOut,changeBackgroundmenu);
+
+		StringBuffer st = new StringBuffer("-fx-font-size:20");
+		zoomIn.setOnAction(event -> {
+			String st3 = st.substring(14,16);
+			Integer x = Integer.parseInt(st3) + 5;
+			st.replace(14,16,x.toString());
+
+			javaArea.setStyle(st.toString());
+		});
+
+		zoomOut.setOnAction(event -> {
+			String st3 = st.substring(14,16);
+			Integer x = Integer.parseInt(st3) - 5;
+			st.replace(14,16,x.toString());
+
+			javaArea.setStyle(st.toString());
+		});
+
+		/**
+		 * Help Menu
+		 */
+		Menu helpMenu = new Menu("Help");
+
+		MenuItem documentation = new MenuItem("Documentation");
+		File documentationfile = new File("src/examples/README.md");
+		documentation.setOnAction(e -> openExample(documentationfile));
+
+		MenuItem about = new MenuItem("About");
+		File aboutfile = new File("examples/j2p_html.html");
+		//about.setOnAction(e -> getHostServices().showDocument("D:\\Documents\\GitHub\\JavaToPythonTranslator\\src\\examples\\j2p_html.html"));
+		about.setOnAction(e -> getHostServices().showDocument(new File("src/examples/j2p_html.html").getAbsolutePath()));
+		MenuItem reportBug = new MenuItem("Report Issue");
+		reportBug.setOnAction(e -> getHostServices().showDocument("https://github.com/dlance8/JavaToPythonTranslator/issues"));
+
+		/**
+		 * Change background colors
+		 */
+		String lightStyle = javaArea.getStyle();
+		darkBackground.setOnAction(e ->javaArea.setStyle("-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #000000; -fx-text-fill: #00ff00; "));
+		lightBackground.setOnAction(e ->javaArea.setStyle(lightStyle));
+
+		changeBackgroundmenu.getItems().addAll(lightBackground,darkBackground);
+
+		helpMenu.getItems().addAll(documentation,about,reportBug);
 
 		// ADD ALL MENUS TO THE MENU BAR
+		menuBar.getMenus().addAll(jMenu, pyMenu, exMenu);
+		HBox hBoxMenu = new HBox();
 
-		menuBar.getMenus().addAll(menu1, menu2, menu3, menu4);
+		MenuBar menuBar2 = new MenuBar();
+		menuBar2.getMenus().addAll(settingsMenu, helpMenu);
+		menuBar2.setPrefWidth(600);
+
 		buttonbar.getButtons().addAll(cmd, idle);
+		Button translateButton = new Button("Translate");
+		translateButton.setOnAction(e -> translate());
 
+		hBoxMenu.getChildren().addAll(menuBar, translateButton, menuBar2);
 
 		HBox hBox = new HBox();
 		hBox.getChildren().addAll(javaArea, pythonArea);
 
-		//pythonArea.setEditable(false);
-
-		vBox.getChildren().addAll(menuBar, hBox, buttonbar);
+		vBox.getChildren().addAll(hBoxMenu, hBox, buttonbar);
+		//vBox.getChildren().addAll(menuBar, hBox, buttonbar);
 
 		pythonArea.setEditable(false);
 
@@ -195,26 +304,25 @@ public class MyApp extends Application {
 
 	private void commandLine() {
 		try {
-			//System.out.println(pythonSaveLocation);
-			Runtime.getRuntime().exec(new String[] {"cmd", "/K", "Start"});
+			StringBuilder sb = new StringBuilder();
 
+			//Runtime.getRuntime().exec(new String[] {"cmd", "/K", "Start"}); // opens cmd
 
-			/**
-			 * The code below runs the saved python file and prints the output to the console.
-			 * Haven't figured out how to get the saved code to run in command line.
-			 * Maybe we can have a seperate window pop up to display python output?
-			 */
-//			ProcessBuilder builder = new ProcessBuilder(
-//					"cmd.exe", "/c", "python " + pythonSaveLocation);
-//			builder.redirectErrorStream(true);
-//			Process p = builder.start();
-//			BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
-//			String line;
-//			while (true) {
-//				line = r.readLine();
-//				if (line == null) { break; }
-//				System.out.println(line);
-//			}
+			ProcessBuilder builder = new ProcessBuilder(
+					"cmd.exe", "/c", "python " + pythonSaveLocation);
+			builder.redirectErrorStream(true);
+			Process p = builder.start();
+			BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			String line;
+			while (true) {
+				line = r.readLine();
+				if (line == null) { break; }
+				sb.append(line).append("\n");
+				//System.out.println(line);
+			}
+			//System.out.println(sb.toString());
+			displayTextWindow(sb.toString());
+
 		}
 		catch (Exception e)
 		{
@@ -225,7 +333,7 @@ public class MyApp extends Application {
 
 	private void runidle(){
 		try {
-			ProcessBuilder pb = new ProcessBuilder("cmd", "/c", "C:AppData\\Local\\Programs\\Python\\Python310\\IDLE.lnk");
+			ProcessBuilder pb = new ProcessBuilder("cmd", "/c", "python -m idlelib");
 			Process process = pb.start();
 		}
 		catch (Exception e)
@@ -358,6 +466,18 @@ public class MyApp extends Application {
 		javaArea.setText(readFile(example_file));
 
 	}
+	private void displayTextWindow(String text) {
+		Stage stage = new Stage();
+		stage.setTitle("Python Output");
+		TextArea textArea = new TextArea(text);
+		textArea.setFont(Font.font("Monospaced", null, null, 20));
 
+		textArea.setEditable(false);
+		textArea.prefWidthProperty().bind(stage.widthProperty());
+		textArea.prefHeightProperty().bind(stage.heightProperty());
+
+		stage.setScene(new Scene(new Pane(textArea), 500, 500));
+		stage.show();
+	}
 
 }
