@@ -9,22 +9,25 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
+
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
+import javafx.scene.control.Button;
+import java.awt.Desktop;
+
 public class MyApp extends Application {
 	private boolean javaIsSaved = true, pythonIsSaved = true;
 	private File javaFile, pythonFile;
+	private File workingDirectory = new File(System.getProperty("user.dir"));
 	private Stage primaryStage;
-
-	private final FileChooser javaFileChooser = new FileChooser(), pythonFileChooser = new FileChooser();
+	private final FileChooser javaFileChooser = new FileChooser();
+	private final FileChooser pythonFileChooser = new FileChooser();
 	private final TextArea javaArea = new TextArea(), pythonArea = new TextArea();
 	private final Alert alert = new Alert(null, "Unsaved Java and Python code will be lost.", ButtonType.OK, ButtonType.CANCEL);
+	private String pythonSaveLocation;
 
 	@Override
 	public void start(Stage primaryStage) {
@@ -38,6 +41,7 @@ public class MyApp extends Application {
 			javaFiles = new FileChooser.ExtensionFilter("Java Files", "*.java"),
 			pythonFiles = new FileChooser.ExtensionFilter("Python Files", "*.py");
 
+
 		javaFileChooser.setTitle("Choose a Java file:");
 		javaFileChooser.getExtensionFilters().addAll(javaFiles, allFiles);
 
@@ -47,14 +51,21 @@ public class MyApp extends Application {
 		VBox vBox = new VBox();
 
 		MenuBar menuBar = new MenuBar();
+		ButtonBar buttonbar = new ButtonBar();
 
 		// Translate menu
 		Menu menu1 = new Menu("Translate");
-
 		MenuItem menu1a = new MenuItem("Translate");
 		menu1a.setOnAction(e -> translate());
 
+
 		menu1.getItems().addAll(menu1a);
+
+		//Buttons for cmdline + idle
+		Button cmd = new Button("Command Line");
+		cmd.setOnAction(e ->commandLine());
+		Button idle = new Button("Idle");
+		idle.setOnAction(e -> runidle());
 
 		// Java file options menu
 		Menu menu2 = new Menu("Java File");
@@ -85,39 +96,50 @@ public class MyApp extends Application {
 
 		menu3.getItems().addAll(menu3a, menu3b);
 
-		// MENU 4
+		// Examples menu
 		Menu menu4 = new Menu("Examples");
+		Menu subMenu = new Menu("Fundamentals");
 
-		MenuItem ex1 = new MenuItem("Example 1");
+		MenuItem ex1 = new MenuItem("Class Methods");
 		File ex1file = new File("src/examples/classMethods.java");
-
-		MenuItem ex2 = new MenuItem("Example 2");
-		File ex2file = new File("src/examples/variableDeclaration.java");
-
-		MenuItem ex3 = new MenuItem("Example 3");
-		File ex3file = new File("src/examples/ifElse.java");
-
-		MenuItem ex4 = new MenuItem("Example 4");
-		File ex4file = new File("src/examples/whileLoops.java");
-
-		MenuItem ex5 = new MenuItem("Example 5");
-		File ex5file = new File("src/examples/boilerplateJavaFile.java");
-
-
 		ex1.setOnAction(e -> openExample(ex1file));
+
+		MenuItem ex2 = new MenuItem("Variable Declaration");
+		File ex2file = new File("src/examples/variableDeclaration.java");
 		ex2.setOnAction(e -> openExample(ex2file));
+
+		MenuItem ex3 = new MenuItem("If/else Statements");
+		File ex3file = new File("src/examples/ifElse.java");
 		ex3.setOnAction(e -> openExample(ex3file));
+
+		MenuItem ex4 = new MenuItem("While Loops");
+		File ex4file = new File("src/examples/whileLoops.java");
 		ex4.setOnAction(e -> openExample(ex4file));
+
+		MenuItem ex5 = new MenuItem("For Loops");
+		File ex5file = new File("src/examples/forLoops.java");
 		ex5.setOnAction(e -> openExample(ex5file));
 
-		menu4.getItems().addAll(ex1, ex2, ex3, ex4, ex5);
+		MenuItem ex6 = new MenuItem("Testing");
+		File ex6file = new File("src/examples/testing.java");
+		ex6.setOnAction(e -> openExample(ex6file));
+
+		MenuItem ex7 = new MenuItem("Objects");
+		File ex7file = new File("src/examples/objects.java");
+		ex7.setOnAction(e -> openExample(ex7file));
+
+		MenuItem program1 = new MenuItem("EvenOdd");
+		File evenOdd = new File("src/examples/EvenOdd.java");
+		program1.setOnAction(e -> openExample(evenOdd));
+
+		subMenu.getItems().addAll(ex1, ex2, ex3, ex4, ex5, ex7);
+
+		menu4.getItems().addAll(subMenu, ex6, program1);
 
 		// ADD ALL MENUS TO THE MENU BAR
 
 		menuBar.getMenus().addAll(menu1, menu2, menu3, menu4);
-
-
-
+		buttonbar.getButtons().addAll(cmd, idle);
 
 
 		HBox hBox = new HBox();
@@ -125,7 +147,7 @@ public class MyApp extends Application {
 
 		//pythonArea.setEditable(false);
 
-		vBox.getChildren().addAll(menuBar, hBox);
+		vBox.getChildren().addAll(menuBar, hBox, buttonbar);
 
 		pythonArea.setEditable(false);
 
@@ -140,7 +162,6 @@ public class MyApp extends Application {
 		Font font = Font.font("Monospaced", null, null, 20);
 		javaArea.setFont(font);
 		pythonArea.setFont(font);
-
 
 		Scene scene = new Scene(vBox, 1280, 720);
 
@@ -171,6 +192,50 @@ public class MyApp extends Application {
 			}
 		});
 	}
+
+	private void commandLine() {
+		try {
+			//System.out.println(pythonSaveLocation);
+			Runtime.getRuntime().exec(new String[] {"cmd", "/K", "Start"});
+
+
+			/**
+			 * The code below runs the saved python file and prints the output to the console.
+			 * Haven't figured out how to get the saved code to run in command line.
+			 * Maybe we can have a seperate window pop up to display python output?
+			 */
+//			ProcessBuilder builder = new ProcessBuilder(
+//					"cmd.exe", "/c", "python " + pythonSaveLocation);
+//			builder.redirectErrorStream(true);
+//			Process p = builder.start();
+//			BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+//			String line;
+//			while (true) {
+//				line = r.readLine();
+//				if (line == null) { break; }
+//				System.out.println(line);
+//			}
+		}
+		catch (Exception e)
+		{
+			System.out.println("An error has occurred");
+			e.printStackTrace();
+		}
+	}
+
+	private void runidle(){
+		try {
+			ProcessBuilder pb = new ProcessBuilder("cmd", "/c", "C:AppData\\Local\\Programs\\Python\\Python310\\IDLE.lnk");
+			Process process = pb.start();
+		}
+		catch (Exception e)
+		{
+			System.out.println("An error has occurred");
+			e.printStackTrace();
+		}
+	}
+
+
 	private void updateTitle() {
 		StringBuilder stringBuilder = new StringBuilder();
 		if (!javaIsSaved) {
@@ -212,6 +277,7 @@ public class MyApp extends Application {
 	private void openJava() {
 		if (confirmFails()) return; // Make sure the work is saved
 
+		javaFileChooser.setInitialDirectory(workingDirectory);
 		File file = javaFileChooser.showOpenDialog(primaryStage);
 		if (file != null) {
 			javaFile = file;
@@ -247,8 +313,10 @@ public class MyApp extends Application {
 	}
 	private void savePythonAs() {
 		final File selectedFile = pythonFileChooser.showSaveDialog(primaryStage);
+
 		if (selectedFile != null) {
 			pythonFile = selectedFile;
+			pythonSaveLocation = pythonFile.getPath();
 			savePython();
 		}
 	}
@@ -286,12 +354,10 @@ public class MyApp extends Application {
 		printWriter.print(text);
 		printWriter.close();
 	}
-
-
-
 	private void openExample(File example_file) {
-
 		javaArea.setText(readFile(example_file));
 
 	}
+
+
 }

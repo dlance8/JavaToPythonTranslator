@@ -1,0 +1,59 @@
+General strategy
+1) run parser demo to observe where translations need to occur
+2) define the traversal of the nodes until you get to the terminal nodes you want to translate
+3) print out the correct translation
+
+More in-depth:
+    - Observe parser tree output. All parse trees begin with the root node 'Compilation Unit'
+    - Using the parse tree from a java file containing a whileLoops.java as an example..
+    - Run ParserDemo.java. Be sure to change the file being parsed like so:
+        from ParserDemo.java (line 16): NonterminalNode root = parser.parse(new Lexer().lexFromFile("src/examples/whileLoops.java"));
+    
+    Simplified Parse tree from whileLoops.java:
+        Compilation Unit
+                ---- ...
+                ----- MethodBody
+                        ----Block
+                            --- BlockStatements
+                                    |
+                                    | -- BlockStatement
+                                    |       --LocalVariableDeclarationStatement             
+                                    | -- BlockStatement
+                                    |       --Statement
+                                    |           -WhileStatement
+                                    
+    - In this case, translation will begin at the WhileStatement node. Terminal nodes are the green leaves of the tree
+    - Look at the commented grammar for while loops from Translator.java:
+    
+        private void whileStatement(NonterminalNode parent){
+        // WhileStatement = "while" , "(" , Expression , ")" , Statement ;
+        }
+        
+    -Anything in "" is a Terminal node, everything else is a Nonterminal node.
+    -We need to iterate through the tree like so:
+
+    	private void whileStatement(NonterminalNode parent) {
+    		// WhileStatement = "while" , "(" , Expression , ")" , Statement ;
+
+    		String className = "";  // ignore this
+
+    		int index = 0;
+    		print("while");
+    		index++;
+
+    		print("(");
+    		index++;
+
+    		expression(parent.getNonterminalChild(index));  // traversal of expression node
+    		index++;
+
+    		print("):");
+    		index++;
+
+    		statement(parent.getNonterminalChild(index), className); // traversal of statement node
+                                            
+                           
+                            
+                            
+                            
+                            

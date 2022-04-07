@@ -1,6 +1,7 @@
 package examples;
 
 public class classMethods {
+
     private static void test(){
         System.out.print("test function");
         test2();
