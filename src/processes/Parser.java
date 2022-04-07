@@ -37,7 +37,9 @@ public final class Parser extends MyProcess {
 	}
 
 	private void parserError(String message) {
-		super.error(message);
+		System.err.println(message);
+		System.exit(1);
+		//super.error(message);
 	}
 
 	public NonterminalNode parse(ArrayList<Token> tokens) {
@@ -821,9 +823,24 @@ public final class Parser extends MyProcess {
 		));
 	}
 	private boolean fieldAccess_onlyPrimary() {
-		return accept(Nonterminal.FIELD_ACCESS,
-			() -> acceptAll(this::primary, () -> accept(Terminal.DOT), this::identifier)
-		);
+		final NonterminalNode currentParentAtStart = currentParent;
+
+		currentParent = new NonterminalNode(Nonterminal.MY_ROOT);
+
+		final boolean accepted = accept(this::primary);
+		if (!accepted) {
+			return false;
+		}
+
+		final NonterminalNode primary = currentParent.getNonterminalChild(0);
+		final boolean success = primary.size() == 1 && primary.get(0) instanceof NonterminalNode && primary.getNonterminalChild(0).getValue() == Nonterminal.FIELD_ACCESS;
+
+		if (success) {
+			currentParentAtStart.add(primary.get(0));
+		}
+
+		currentParent = currentParentAtStart;
+		return success;
 	}
 	private boolean arrayAccess() {
 		return accept(Nonterminal.ARRAY_ACCESS, () -> acceptAny(
@@ -929,7 +946,7 @@ public final class Parser extends MyProcess {
 		return accept(Nonterminal.LAMBDA_BODY, () -> acceptAny(this::expression, this::block));
 	}
 	private boolean assignmentExpression() {
-		return accept(Nonterminal.ASSIGNMENT_EXPRESSION, () -> acceptAny(this::conditionalOrExpression, this::assignment));
+		return accept(Nonterminal.ASSIGNMENT_EXPRESSION, () -> acceptAny(this::assignment, this::conditionalOrExpression));
 	}
 	private boolean assignment() {
 		return accept(Nonterminal.ASSIGNMENT, () -> acceptAll(this::leftHandSide, this::assignmentOperator, this::expression));
@@ -959,7 +976,15 @@ public final class Parser extends MyProcess {
 		return accept(Nonterminal.AND_EXPRESSION, () -> acceptAll(this::equalityExpression, () -> acceptRepeating(() -> acceptAll(() -> accept(Terminal.AND), this::equalityExpression))));
 	}
 	private boolean equalityExpression() {
-		return accept(Nonterminal.EQUALITY_EXPRESSION, () -> acceptAll(this::relationalExpression, () -> acceptRepeating(() -> acceptAll(() -> acceptAny(() -> accept(Terminal.EQUAL_TO), () -> accept(Terminal.NOT_EQUAL_TO)), this::relationalExpression))));
+		//return accept(Nonterminal.EQUALITY_EXPRESSION, () -> acceptAll(this::relationalExpression, () -> acceptRepeating(() -> acceptAll(() -> acceptAny(() -> accept(Terminal.EQUAL_TO), () -> accept(Terminal.NOT_EQUAL_TO)), this::relationalExpression))));
+		return accept(Nonterminal.EQUALITY_EXPRESSION, () -> {
+			if (!accept(this::relationalExpression))
+				return false;
+
+			acceptRepeating(() -> acceptAll(() -> acceptAny(() -> accept(Terminal.EQUAL_TO), () -> accept(Terminal.NOT_EQUAL_TO)), this::relationalExpression));
+
+			return true;
+		});
 	}
 	private boolean relationalExpression() {
 		return accept(Nonterminal.RELATIONAL_EXPRESSION,
@@ -1055,6 +1080,7 @@ public final class Parser extends MyProcess {
 	}
 
 	private boolean primary() {
+
 		final NonterminalNode parentAtStart = currentParent;
 		currentParent = new NonterminalNode(Nonterminal.MY_ROOT);
 
@@ -1079,18 +1105,19 @@ public final class Parser extends MyProcess {
 		if (!started)
 			return false;
 
-
 		NonterminalNode result = currentParent.getNonterminalChild(0);
 		while (true) {
-			final boolean accepted = accept(Nonterminal.PRIMARY, () -> acceptAny(
-				() -> accept(Nonterminal.CLASS_INSTANCE_CREATION_EXPRESSION,
-					() -> acceptAll(() -> accept(Terminal.DOT), this::unqualifiedClassInstanceCreationExpression)),
-				() -> accept(Nonterminal.METHOD_INVOCATION,
-					() -> acceptAll(() -> accept(Terminal.DOT), () -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS))),
-				() -> accept(Nonterminal.FIELD_ACCESS,
-					() -> acceptAll(() -> accept(Terminal.DOT), this::identifier)),
-				() -> accept(Nonterminal.METHOD_REFERENCE,
-					() -> acceptAll(() -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier))
+			final boolean accepted = accept(Nonterminal.PRIMARY,
+				() -> accept(Nonterminal.PRIMARY_NO_NEW_ARRAY, () -> acceptAny(
+					() -> accept(Nonterminal.CLASS_INSTANCE_CREATION_EXPRESSION,
+						() -> acceptAll(() -> accept(Terminal.DOT), this::unqualifiedClassInstanceCreationExpression)),
+					() -> accept(Nonterminal.METHOD_INVOCATION,
+						() -> acceptAll(() -> accept(Terminal.DOT), () -> acceptOptional(this::typeArguments), this::identifier, () -> accept(Terminal.OPEN_PARENTHESIS), () -> acceptOptional(this::argumentList), () -> accept(Terminal.CLOSE_PARENTHESIS))),
+					() -> accept(Nonterminal.FIELD_ACCESS,
+						() -> acceptAll(() -> accept(Terminal.DOT), this::identifier)),
+					() -> accept(Nonterminal.METHOD_REFERENCE,
+						() -> acceptAll(() -> accept(Terminal.DOUBLE_COLON), () -> acceptOptional(this::typeArguments), this::identifier))
+				)
 			));
 			if (accepted) {
 				final NonterminalNode newResult = currentParent.getNonterminalChild(currentParent.size() - 1);

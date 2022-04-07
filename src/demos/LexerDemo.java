@@ -7,9 +7,9 @@ import java.util.ArrayList;
 public class LexerDemo {
 	public static void main(String[] args) throws IOException {
 		final long startTime = System.nanoTime();
-		ArrayList<Token> tokens = new Lexer().lexFromFile("src/MyClass.java");
+		ArrayList<Token> tokens = new Lexer().lexFromFile("C:/Workspaces/in/ArrayList.java");
 		final long stopTime = System.nanoTime();
-		demo1(tokens);
+		demo2(tokens);
 		System.out.println((stopTime - startTime) / 1e6 + "ms");
 	}
 
@@ -18,6 +18,7 @@ public class LexerDemo {
 			System.out.println(token);
 		}
 	}
+
 	private static void demo2(ArrayList<Token> tokens) {
 		if (tokens.size() == 0) return;
 
