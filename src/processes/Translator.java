@@ -8,7 +8,6 @@ import datastructures.tree.TreeNode;
 import java.util.Hashtable;
 
 import static constants.Nonterminal.*;
-import static constants.Nonterminal.IDENTIFIER;
 import static constants.Terminal.*;
 
 public class  Translator extends MyProcess {
@@ -24,7 +23,7 @@ public class  Translator extends MyProcess {
 	private String declaredVarName;
 	private String declaredVarType;
 	private boolean needsToBeCasted;
-	private boolean constructorBody;
+	private boolean constructorMethod;
 	private boolean staticMethod;
 
 	public Translator() {
@@ -340,7 +339,9 @@ public class  Translator extends MyProcess {
 				index++;
 			}
 			else if(child.getValue() == CONSTRUCTOR_DECLARATOR) {
+				constructorMethod = true;
 				constructorDeclarator(child);
+				constructorMethod = false;
 				index++;
 			}
 			else if(child.getValue() == CONSTRUCTOR_BODY) {
@@ -399,7 +400,7 @@ public class  Translator extends MyProcess {
 		// FormalParameters = FormalParameter , { "," , FormalParameter }
 		//                  | ReceiverParameter , { "," , FormalParameter } ;
 
-		if(staticMethod == false){
+		if(staticMethod == false && constructorMethod == false){
 			print("self,");
 		}
 		int index = 0;
@@ -456,10 +457,9 @@ public class  Translator extends MyProcess {
 	private void constructorBody(NonterminalNode parent) {
 		// ConstructorBody = "{" , [ ExplicitConstructorInvocation ] , [ BlockStatements ] , "}" ;
 
-		constructorBody = true;
+		constructorMethod = true;
 		if(parent.size() > 2){
 			setIndentWithNewline(2);
-			//print("self.");
 		}
 		int index = 0;
 		TreeNode child;
@@ -485,7 +485,7 @@ public class  Translator extends MyProcess {
 				}
 			}
 		}
-		constructorBody = false;
+		constructorMethod = false;
 	}
 	private void simpleTypeName(NonterminalNode parent) {
 		// SimpleTypeName = Identifier ;
@@ -1547,9 +1547,7 @@ public class  Translator extends MyProcess {
 		if (exprName.equals("System")) {
 			// do nothing
 		}
-//		else if(constructorBody == true){
-//			print("self." + exprName);
-//		}
+
 
 
 		else if(parent.size() > 1){
@@ -1862,7 +1860,7 @@ public class  Translator extends MyProcess {
 		//              | ArrayAccess ;
 		NonterminalNode child = parent.getNonterminalChild(0);
 		if(child.getValue() == EXPRESSION_NAME){
-			if(constructorBody == true){
+			if(constructorMethod == true){
 				print("self.");
 				expressionName(child);
 			}

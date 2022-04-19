@@ -1,7 +1,6 @@
 package app;
 import javafx.application.Application;
 import javafx.beans.binding.DoubleBinding;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
@@ -12,23 +11,14 @@ import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebEvent;
-import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import java.awt.*;
+
 import java.io.*;
 import java.util.Scanner;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import javafx.*;
 
 public class MyApp extends Application {
 
@@ -102,7 +92,7 @@ public class MyApp extends Application {
 		 * Buttons for cmdline + idle
 		 */
 		Button cmd = new Button("Run");
-		cmd.setOnAction(e ->commandLine());
+		cmd.setOnAction(e -> run());
 		Button idle = new Button("Idle");
 		idle.setOnAction(e -> runidle());
 
@@ -174,13 +164,17 @@ public class MyApp extends Application {
 		File ex7file = new File("src/examples/objects.java");
 		ex7.setOnAction(e -> openExample(ex7file));
 
+		MenuItem ex8 = new MenuItem("Binary Search");
+		File ex8file = new File("src/examples/BinarySearch.java");
+		ex8.setOnAction(e -> openExample(ex8file));
+
 //		MenuItem program1 = new MenuItem("EvenOdd");
 //		File evenOdd = new File("src/examples/EvenOdd.java");
 //		program1.setOnAction(e -> openExample(evenOdd));
 
 //		subMenu.getItems().addAll(ex1, ex2, ex3, ex4, ex5, ex7);
 
-		exMenu.getItems().addAll(ex1, ex2, ex3, ex4, ex5, ex7);
+		exMenu.getItems().addAll(ex1, ex2, ex3, ex4, ex5, ex7, ex8);
 
 		/**
 		 * Settings Menu
@@ -302,32 +296,37 @@ public class MyApp extends Application {
 		});
 	}
 
-	private void commandLine() {
-		try {
-			StringBuilder sb = new StringBuilder();
-
-			//Runtime.getRuntime().exec(new String[] {"cmd", "/K", "Start"}); // opens cmd
-
-			ProcessBuilder builder = new ProcessBuilder(
-					"cmd.exe", "/c", "python " + pythonSaveLocation);
-			builder.redirectErrorStream(true);
-			Process p = builder.start();
-			BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			String line;
-			while (true) {
-				line = r.readLine();
-				if (line == null) { break; }
-				sb.append(line).append("\n");
-				//System.out.println(line);
-			}
-			//System.out.println(sb.toString());
-			displayTextWindow(sb.toString());
-
+	private void run() {
+		if(!pythonIsSaved){
+			savePython();
 		}
-		catch (Exception e)
-		{
-			System.out.println("An error has occurred");
-			e.printStackTrace();
+		else if(pythonFile == null){
+			displayTextWindow("Kinda weird you're trying to run an empty file, but lets see what happens.\n\nAttempting to run an empty python file...\nnothing interesting happens");
+		}
+		else{
+			try {
+				StringBuilder sb = new StringBuilder();
+				ProcessBuilder builder = new ProcessBuilder(
+						"cmd.exe", "/c", "python " + pythonSaveLocation);
+				builder.redirectErrorStream(true);
+				Process p = builder.start();
+				BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+				String line;
+				while (true) {
+					line = r.readLine();
+					if (line == null) { break; }
+					sb.append(line).append("\n");
+					//System.out.println(line);
+				}
+				//System.out.println(sb.toString());
+				displayTextWindow(sb.toString());
+
+			}
+			catch (Exception e)
+			{
+				System.out.println("An error has occurred");
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -379,6 +378,7 @@ public class MyApp extends Application {
 		javaFile = pythonFile = null;
 		javaArea.clear();
 		pythonArea.clear();
+
 		javaIsSaved = pythonIsSaved = true;
 		updateTitle();
 	}
@@ -411,6 +411,7 @@ public class MyApp extends Application {
 		}
 	}
 	private void savePython() {
+		pythonFileChooser.setInitialDirectory(new File("src/pyFiles"));
 		if (pythonFile == null) {
 			savePythonAs();
 		} else {
